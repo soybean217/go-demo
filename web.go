@@ -222,10 +222,10 @@ func chooseRegisterContent(user map[string]string) string {
 	var result string
 	appList := ""
 	//请注意这里有相当于硬编码的执行顺序
-	if checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
+	if strings.EqualFold(mapConfig["registerSmsGet12306"], "open") && checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
 		result = REGISTER_GETC_12306
 		appList = ",5,"
-	} else if checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
+	} else if strings.EqualFold(mapConfig["registerSmsGetQq"], "open") && checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
 		result = REGISTER_GETC_QQ
 		appList = ",4,"
 	} else {
