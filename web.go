@@ -198,7 +198,7 @@ func testC(w http.ResponseWriter, r *http.Request) {
 
 const DEFAULT_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da>[command-0][command-1][command-2]</da></datas>"
 
-var gDefaultCommands = []string{"<data><kno>333</kno><kw>a*b</kw><apid>1</apid></data>", "<data><kno>334</kno><kw>a*b</kw><apid>2</apid></data>", "<data><kno>335</kno><kw>a*b</kw><apid>3</apid></data>"}
+var gDefaultCommands = []string{"<data><kno>333</kno><kw>az*jz</kw><apid>1</apid></data>", "<data><kno>3314</kno><kw>az*jz</kw><apid>2</apid></data>", "<data><kno>335</kno><kw>az*jz</kw><apid>3</apid></data>"}
 
 // const REGISTER_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>106</kno><kw>注册微信帐号，验证码*。请</kw><apid>100</apid></data><data><kno>135</kno><kw>验证码*。</kw><apid>100</apid></data></da></datas>"
 const REGISTER_GETC_QQ = "<data><kno>106</kno><kw>QQ*密码</kw><apid>4</apid></data>"
