@@ -227,7 +227,8 @@ func getC(w http.ResponseWriter, r *http.Request) {
 			go cleanRegisterUserCmdList(*user)
 		}
 	}
-	w.Write([]byte(procGetResp(resp)))
+	resp = procGetResp(resp)
+	w.Write([]byte(resp))
 
 	log.Println("getC RawQuery,", r.URL.RawQuery)
 
