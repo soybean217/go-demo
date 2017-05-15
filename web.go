@@ -276,7 +276,7 @@ func chooseRegisterContent(user map[string]string) string {
 				go insertRelation(user, v["apid"])
 			} else if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
 				needCmd = true
-				go updateRelation(userRecordMap[v["apid"]]["id"])
+				go updateRelation(userRecordMap[v["apid"]])
 			}
 			if needCmd {
 				result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
@@ -310,7 +310,7 @@ func insertRelation(user map[string]string, apid string) {
 	insert(dbConfig, sql, user["imsi"], apid, time.Now().Unix())
 }
 
-func updateRelation(id string) {
+func updateRelation(relation map[string]string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("error begin:")
@@ -318,8 +318,17 @@ func updateRelation(id string) {
 			log.Println("error end:")
 		}
 	}()
+	log.Println(relation)
+	if len([]rune(relation["fetchTime"])) > 4 {
+		_fetchTime, _ := strconv.ParseInt(relation["fetchTime"], 10, 64)
+		if time.Now().Unix()-_fetchTime > 86400 {
+			sql := `update register_user_relations set getTime = ? , registerChannelId = null  where id =?`
+			exec(dbConfig, sql, time.Now().Unix(), relation["id"])
+			return
+		}
+	}
 	sql := `update register_user_relations set getTime = ? where id =?`
-	insert(dbConfig, sql, time.Now().Unix(), id)
+	exec(dbConfig, sql, time.Now().Unix(), relation["id"])
 }
 
 func checkSmsRegister(user map[string]string, cmdParaName string, successParaName string, sysLimitName string) bool {
