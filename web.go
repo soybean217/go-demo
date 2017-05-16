@@ -74,10 +74,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 	}
 	if vi, ok := mapRegisterTargetConfig.Load(r.FormValue("apid")); ok {
 		v := vi.(map[string]string)
-		if strings.EqualFold(v["state"], "open") {
+		if strings.EqualFold(v["stateSend2Channel"], "open") {
 			// 微信
 			if strings.EqualFold(r.FormValue("apid"), "102") {
-				processWechatRegister(msg, *user)
+				processWechatRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -116,6 +116,7 @@ func processQqRegister(msg string, user map[string]string) {
 		log.Println("processQqRegister can not match:%s", msg)
 	}
 }
+
 func process12306Register(msg string, user map[string]string) {
 	exp := regexp.MustCompile(`码：(\S*)。如`)
 	result := exp.FindStringSubmatch(msg)
@@ -133,8 +134,8 @@ func process12306Register(msg string, user map[string]string) {
 		log.Println("process12306Register can not match:%s", msg)
 	}
 }
-func processWechatRegister(msg string, user map[string]string) {
-	exp := regexp.MustCompile(`码：(\S*)。如`)
+func processWechatRegister(msg string, user map[string]string, apid string) {
+	exp := regexp.MustCompile(`码(\S*)。请`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
@@ -143,12 +144,24 @@ func processWechatRegister(msg string, user map[string]string) {
 		if len([]rune(user["mobile"])) == 13 {
 			mobile = mobile[2:13]
 		}
-		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getWXChCode.jsp?cid=wx109&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
-		go updateRegisterUserSuccess(user, "register12306SuccessCount")
+		go updateRelationSuccess(user, apid)
 	} else {
-		log.Println("process12306Register can not match:%s", msg)
+		log.Println("processWechatRegister can not match:%s", msg)
 	}
+}
+
+func updateRelationSuccess(user map[string]string, apid string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	sql := "update register_user_relations set  successCount =ifnull(successCount,0)+1,lastSendTime=? where imsi=? and apid=?"
+	exec(dbConfig, sql, time.Now().Unix(), user["imsi"], apid)
 }
 
 func send2Url(url string) {
