@@ -276,7 +276,7 @@ func chooseRegisterContent(user map[string]string) string {
 	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
 		if appCount < 3 {
 			v := vi.(map[string]string)
-			if strings.EqualFold(v["stateGet"], "open") {
+			if strings.EqualFold(v["stateGet"], "open") && strings.LastIndex(v["closeProvinceList"], user["province"]) == -1 {
 				needCmd := false
 				if userRecordMap[v["apid"]] == nil {
 					needCmd = true
@@ -288,6 +288,13 @@ func chooseRegisterContent(user map[string]string) string {
 				if needCmd {
 					result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
 					appCount++
+				}
+			} else {
+				if userRecordMap[v["apid"]] != nil {
+					_getTime, _ := strconv.ParseInt(userRecordMap[v["apid"]]["getTime"], 10, 64)
+					if time.Now().Unix()-_getTime < 86400 {
+						go updateRelationSetGetTimeZero(userRecordMap[v["apid"]])
+					}
 				}
 			}
 			return true
@@ -325,7 +332,6 @@ func updateRelation(relation map[string]string) {
 			log.Println("error end:")
 		}
 	}()
-	log.Println(relation)
 	if len([]rune(relation["fetchTime"])) > 4 {
 		_fetchTime, _ := strconv.ParseInt(relation["fetchTime"], 10, 64)
 		if time.Now().Unix()-_fetchTime > 86400 {
@@ -336,6 +342,18 @@ func updateRelation(relation map[string]string) {
 	}
 	sql := `update register_user_relations set getTime = ? where id =?`
 	exec(dbConfig, sql, time.Now().Unix(), relation["id"])
+}
+
+func updateRelationSetGetTimeZero(relation map[string]string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	sql := `update register_user_relations set getTime = 0 where id =?`
+	exec(dbConfig, sql, relation["id"])
 }
 
 func checkSmsRegister(user map[string]string, cmdParaName string, successParaName string, sysLimitName string) bool {
