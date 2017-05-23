@@ -303,7 +303,7 @@ func chooseRegisterContent(user map[string]string) string {
 	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
 		if appCount < 3 {
 			v := vi.(map[string]string)
-			if strings.EqualFold(v["stateGet"], "open") && strings.LastIndex(v["closeProvinceList"], user["province"]) == -1 {
+			if strings.EqualFold(v["stateGet"], "open") && strings.LastIndex(v["closeProvinceList"], user["province"]) == -1 && checkCloseMobileNumHardcore(user["mobile"], v["apid"]) {
 				needCmd := false
 				if userRecordMap[v["apid"]] == nil {
 					needCmd = true
@@ -337,6 +337,47 @@ func chooseRegisterContent(user map[string]string) string {
 		go cleanRegisterUserCmdList(user)
 	}
 	return result
+}
+
+func checkCloseMobileNumHardcore(mobile string, apid string) bool {
+	if strings.EqualFold(apid, "102") {
+		if strings.LastIndex(mobile, "86170") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "86171") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "171") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "86172") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "172") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "86174") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "174") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "86175") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "175") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "86176") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "176") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "86179") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "179") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "8614") == 0 {
+			return false
+		} else if strings.LastIndex(mobile, "14") == 0 {
+			return false
+		} else {
+			return true
+		}
+	} else {
+		return true
+	}
+
 }
 
 func insertRelation(user map[string]string, apid string) {
