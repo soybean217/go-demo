@@ -317,7 +317,7 @@ func chooseRegisterContent(user map[string]string) string {
 	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
 		if appCount < 3 {
 			v := vi.(map[string]string)
-			if strings.EqualFold(v["stateGet"], "open") && strings.LastIndex(v["closeProvinceList"], user["province"]) == -1 && checkCloseMobileNumHardcore(user["mobile"], v["apid"]) {
+			if strings.EqualFold(v["stateGet"], "open") && strings.LastIndex(v["closeProvinceList"], user["province"]) == -1 && checkCloseMobileNumHardcore(user, v["apid"]) {
 				needCmd := false
 				if userRecordMap[v["apid"]] == nil {
 					needCmd = true
@@ -353,45 +353,60 @@ func chooseRegisterContent(user map[string]string) string {
 	return result
 }
 
-func checkCloseMobileNumHardcore(mobile string, apid string) bool {
+func checkCloseMobileNumHardcore(user map[string]string, apid string) bool {
 	if strings.EqualFold(apid, "102") {
-		if strings.LastIndex(mobile, "86170") == 0 {
+		if checkNotVirtualMobile(user["mobile"]) {
+			return true
+		} else {
 			return false
-		} else if strings.LastIndex(mobile, "86171") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "171") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "86172") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "172") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "86174") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "174") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "86175") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "175") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "86176") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "176") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "86179") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "179") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "8614") == 0 {
-			return false
-		} else if strings.LastIndex(mobile, "14") == 0 {
+		}
+	} else if strings.EqualFold(apid, "104") {
+		if checkNotVirtualMobile(user["mobile"]) {
+			return true
+		} else if strings.EqualFold(user["mobileType"], "ChinaUnion") {
 			return false
 		} else {
-			return true
+			return false
 		}
 	} else {
 		return true
 	}
+}
 
+func checkNotVirtualMobile(mobile string) bool {
+	if strings.LastIndex(mobile, "86170") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "86171") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "171") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "86172") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "172") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "86174") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "174") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "86175") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "175") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "86176") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "176") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "86179") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "179") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "8614") == 0 {
+		return false
+	} else if strings.LastIndex(mobile, "14") == 0 {
+		return false
+	} else {
+		return true
+	}
 }
 
 func insertRelation(user map[string]string, apid string) {
