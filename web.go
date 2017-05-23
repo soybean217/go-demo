@@ -158,8 +158,17 @@ func formatMobile(ori string) string {
 
 func processJindongRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
-	go send2Url(url)
+	exp := regexp.MustCompile(`为(\S*)（`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+
+	} else {
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+	}
 	go updateRelationSuccess(user, apid)
 
 	// exp := regexp.MustCompile(`为：(\S*)，`)
