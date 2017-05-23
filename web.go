@@ -81,6 +81,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processWechatRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "103") {
 				processJindongRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "104") {
+				processSinaRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -183,6 +185,12 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	// 		log.Println("processWechatRegister can not match:%s", msg)
 	// 	}
 	// }
+}
+func processSinaRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=web115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+	go send2Url(url)
+	go updateRelationSuccess(user, apid)
 }
 
 func updateRelationSuccess(user map[string]string, apid string) {
