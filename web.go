@@ -305,16 +305,16 @@ func procGetResp(resp string) string {
 }
 
 func chooseRegisterContent(user map[string]string) string {
-	var result string
+	result := DEFAULT_GETC
 	appList := ""
 	appCount := 0
 	//请注意这里有相当于硬编码的执行顺序
 	if v, ok := mapConfig.Load("registerSmsGet12306"); ok && strings.EqualFold(v.(string), "open") && checkSmsRegister(user, "register12306CmdCount", "register12306SuccessCount", "12306RegisterLimit") {
-		result = strings.Replace(DEFAULT_GETC, "[command-0]", REGISTER_GETC_12306, -1)
+		result = strings.Replace(result, "[command-0]", REGISTER_GETC_12306, -1)
 		appList = ",5,"
 		appCount++
 	} else if v, ok := mapConfig.Load("registerSmsGetQq"); ok && strings.EqualFold(v.(string), "open") && checkSmsRegister(user, "registerQqCmdCount", "registerQqSuccessCount", "qqRegisterLimit") {
-		result = strings.Replace(DEFAULT_GETC, "[command-0]", REGISTER_GETC_QQ, -1)
+		result = strings.Replace(result, "[command-0]", REGISTER_GETC_QQ, -1)
 		appList = ",4,"
 		appCount++
 	}
@@ -353,10 +353,11 @@ func chooseRegisterContent(user map[string]string) string {
 		}
 	})
 
-	if !strings.EqualFold(appList, "") {
-		go processRegisterUser(user, appList)
+	if appCount > 0 {
+		if !strings.EqualFold(appList, "") {
+			go processRegisterUser(user, appList)
+		}
 	} else {
-		result = DEFAULT_GETC
 		go cleanRegisterUserCmdList(user)
 	}
 	return result
