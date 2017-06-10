@@ -297,7 +297,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 func procGetResp(resp string) string {
 	result := resp
 	for i := 0; i < len(gDefaultCommands); i++ {
-		if strings.LastIndex(result, "[command-"+strconv.Itoa(i)+"]") >= 0 {
+		if strings.Index(result, "[command-"+strconv.Itoa(i)+"]") >= 0 {
 			result = strings.Replace(result, "[command-"+strconv.Itoa(i)+"]", gDefaultCommands[i], -1)
 		}
 	}
@@ -326,7 +326,7 @@ func chooseRegisterContent(user map[string]string) string {
 	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
 		if appCount < 3 {
 			v := vi.(map[string]string)
-			if strings.EqualFold(v["stateGet"], "open") && strings.LastIndex(v["closeProvinceList"], user["province"]) == -1 && checkCloseMobileNumHardcore(user, v["apid"]) {
+			if strings.EqualFold(v["stateGet"], "open") && strings.Index(v["closeProvinceList"], user["province"]) == -1 && checkCloseMobileNumHardcore(user, v["apid"]) {
 				needCmd := false
 				if userRecordMap[v["apid"]] == nil {
 					needCmd = true
@@ -357,7 +357,8 @@ func chooseRegisterContent(user map[string]string) string {
 		if !strings.EqualFold(appList, "") {
 			go processRegisterUser(user, appList)
 		}
-	} else {
+	}
+	if strings.Index(appList, ",4,") == -1 && strings.Index(appList, ",5,") == -1 {
 		go cleanRegisterUserCmdList(user)
 	}
 	return result
@@ -384,35 +385,35 @@ func checkCloseMobileNumHardcore(user map[string]string, apid string) bool {
 }
 
 func checkNotVirtualMobile(mobile string) bool {
-	if strings.LastIndex(mobile, "86170") == 0 {
+	if strings.Index(mobile, "86170") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "86171") == 0 {
+	} else if strings.Index(mobile, "86171") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "171") == 0 {
+	} else if strings.Index(mobile, "171") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "86172") == 0 {
+	} else if strings.Index(mobile, "86172") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "172") == 0 {
+	} else if strings.Index(mobile, "172") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "86174") == 0 {
+	} else if strings.Index(mobile, "86174") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "174") == 0 {
+	} else if strings.Index(mobile, "174") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "86175") == 0 {
+	} else if strings.Index(mobile, "86175") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "175") == 0 {
+	} else if strings.Index(mobile, "175") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "86176") == 0 {
+	} else if strings.Index(mobile, "86176") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "176") == 0 {
+	} else if strings.Index(mobile, "176") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "86179") == 0 {
+	} else if strings.Index(mobile, "86179") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "179") == 0 {
+	} else if strings.Index(mobile, "179") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "8614") == 0 {
+	} else if strings.Index(mobile, "8614") == 0 {
 		return false
-	} else if strings.LastIndex(mobile, "14") == 0 {
+	} else if strings.Index(mobile, "14") == 0 {
 		return false
 	} else {
 		return true
