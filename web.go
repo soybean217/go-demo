@@ -128,7 +128,7 @@ func process12306Register(msg string, user map[string]string) {
 		log.Println(result[1])
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
-		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara=1"
 		go send2Url(url)
 		go updateRegisterUserSuccess(user, "register12306SuccessCount")
 	} else {
@@ -235,7 +235,7 @@ func send2Url(url string) {
 		//返回的状态码
 		status := response.StatusCode
 
-		log.Println(url + ":" + status)
+		log.Println(url + "," + fmt.Sprintf("%d", status))
 	}
 
 }
