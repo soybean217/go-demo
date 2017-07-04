@@ -231,12 +231,11 @@ func send2Url(url string) {
 		//将结果定位到标准输出 也可以直接打印出来 或者定位到其他地方进行相应的处理
 		stdout := os.Stdout
 		_, err = io.Copy(stdout, response.Body)
-		log.Println()
 
 		//返回的状态码
 		status := response.StatusCode
 
-		log.Println(status)
+		log.Println(url + ":" + status)
 	}
 
 }
