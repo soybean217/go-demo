@@ -8,7 +8,7 @@ import (
 	"github.com/golang/sync/syncmap"
 	// "github.com/orcaman/concurrent-map"
 	// "golang.org/x/sync/syncmap"
-	"io"
+	// "io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -135,6 +135,13 @@ func process12306Register(msg string, user map[string]string) {
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
 		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara=1"
+		if v, ok := mapConfig.Load("12306DexingRatio"); ok {
+			ratio, _ := strconv.ParseInt(v.(string), 10, 64)
+			random := rand.New(rand.NewSource(time.Now().UnixNano()))
+			if int64(random.Intn(100)) >= ratio {
+				url = "http://116.62.161.6/shsuwangDXsms?productId=hd005&cpid=10jf9999101&smsContent=" + pwd + "&tel=" + mobile
+			}
+		}
 		go send2Url(url)
 		go updateRegisterUserSuccess(user, "register12306SuccessCount")
 	} else {
@@ -257,13 +264,23 @@ func send2Url(url string) {
 		response, _ := client.Do(reqest)
 
 		//将结果定位到标准输出 也可以直接打印出来 或者定位到其他地方进行相应的处理
-		stdout := os.Stdout
-		_, err = io.Copy(stdout, response.Body)
+		// stdout := os.Stdout
+		// _, err = io.Copy(stdout, response.Body)
 
 		//返回的状态码
 		status := response.StatusCode
+		bodyString := ""
+
+		if response.StatusCode == 200 { // OK
+			bodyBytes, _ := ioutil.ReadAll(response.Body)
+			bodyString = string(bodyBytes)
+		}
 
 		log.Println(url + "," + fmt.Sprintf("%d", status))
+		random := rand.New(rand.NewSource(time.Now().UnixNano()))
+		id := time.Now().UnixNano()/1e2 + int64(random.Intn(10000))
+		sql := `insert into log_async_generals (id,logId,para01,para02,para03) values (?,?,?,?,?)`
+		insert(dbLog, sql, id, 331, url, response.StatusCode, bodyString)
 	}
 
 }
