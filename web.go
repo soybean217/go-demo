@@ -118,7 +118,7 @@ func processQqRegister(msg string, user map[string]string) {
 			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
 			// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
-			url := "http://zy.ardgame18.com:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
 			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
@@ -148,7 +148,7 @@ func processWechatRegister(msg string, user map[string]string, apid string) {
 		log.Println(result[1])
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getWXChCode.jsp?cid=c115&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getWXChCode.jsp?cid=c115&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
 	} else {
@@ -170,11 +170,11 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 
 	} else {
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
@@ -185,11 +185,11 @@ func processGtjaRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 
 	} else {
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
@@ -200,7 +200,7 @@ func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getTBCode.jsp?cid=c115&pid=tb115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getTBCode.jsp?cid=c115&pid=tb115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
@@ -211,14 +211,14 @@ func processQQWithoutMoRegister(msg string, user map[string]string, apid string)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://zy.ardgame18.com:8080/verifycode/api/getQQNY.jsp?cid=c115&pid=ny115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getQQNY.jsp?cid=c115&pid=ny115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
 }
 func processSinaRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	url := "http://zy.ardgame18.com:8080/verifycode/api/getSNWeb.jsp?cid=c115&pid=web115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+	url := "http://121.201.67.97:8080/verifycode/api/getSNWeb.jsp?cid=c115&pid=web115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 	go send2Url(url)
 	go updateRelationSuccess(user, apid)
 }
