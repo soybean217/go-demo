@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -251,7 +252,19 @@ func send2Url(url string) {
 		}
 	}()
 	//生成client 参数为默认
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{
+			Dial: func(netw, addr string) (net.Conn, error) {
+				conn, err := net.DialTimeout(netw, addr, time.Second*4)
+				if err != nil {
+					return nil, err
+				}
+				conn.SetDeadline(time.Now().Add(time.Second * 4))
+				return conn, nil
+			},
+			ResponseHeaderTimeout: time.Second * 4,
+		},
+	}
 	//生成要访问的url
 	log.Println(url)
 	//提交请求
@@ -281,6 +294,7 @@ func send2Url(url string) {
 		id := time.Now().UnixNano()/1e2 + int64(random.Intn(10000))
 		sql := `insert into log_async_generals (id,logId,para01,para02,para03) values (?,?,?,?,?)`
 		insert(dbLog, sql, id, 331, url, response.StatusCode, bodyString)
+		response.Body.Close()
 	}
 
 }
