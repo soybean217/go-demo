@@ -150,7 +150,7 @@ func process12306Register(msg string, user map[string]string) {
 	}
 }
 func processWechatRegister(msg string, user map[string]string, apid string) {
-	exp := regexp.MustCompile(`码(\S*)。请`)
+	exp := regexp.MustCompile(`码(\S*)。转`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
