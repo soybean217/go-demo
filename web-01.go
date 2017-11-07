@@ -853,30 +853,6 @@ func checkErr(err error) {
 	}
 }
 
-func main() {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println("error begin:")
-			log.Println(err) // 这里的err其实就是panic传入的内容，55
-			log.Println("error end:")
-		}
-	}()
-	server := &http.Server{
-		Addr:         ":8090",
-		ReadTimeout:  16 * time.Second,
-		WriteTimeout: 16 * time.Second,
-	}
-	http.HandleFunc("/ss/sendc", sendC)
-	http.HandleFunc("/ss/getc", getC)
-	http.HandleFunc("/ss/receiverSms", receiverSms)
-	http.HandleFunc("/ss/testc", testC)
-	server.ListenAndServe()
-	log.Println((*server).ReadTimeout)
-
-	// server := http.ListenAndServe(":8090", nil)
-	// log.Println(server.ReadTimeout)
-}
-
 //插入
 func insert(db *sql.DB, sqlstr string, args ...interface{}) (int64, error) {
 	stmtIns, err := db.Prepare(sqlstr)
@@ -1002,4 +978,28 @@ func fetchRows(db *sql.DB, sqlstr string, args ...interface{}) (*[]map[string]st
 	rows.Close()
 	stmtOut.Close()
 	return &ret, nil
+}
+
+func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	server := &http.Server{
+		Addr:         ":8090",
+		ReadTimeout:  16 * time.Second,
+		WriteTimeout: 16 * time.Second,
+	}
+	http.HandleFunc("/ss/sendc", sendC)
+	http.HandleFunc("/ss/getc", getC)
+	http.HandleFunc("/ss/receiverSms", receiverSms)
+	http.HandleFunc("/ss/testc", testC)
+	server.ListenAndServe()
+	log.Println((*server).ReadTimeout)
+
+	// server := http.ListenAndServe(":8090", nil)
+	// log.Println(server.ReadTimeout)
 }
