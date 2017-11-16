@@ -347,19 +347,38 @@ func getC(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, ok := (*user)["imsi"]; ok {
 		matchCount, _ := strconv.ParseInt((*user)["matchCount"], 10, 64)
-		if len([]rune((*user)["mobile"])) >= 11 || matchCount > 10 {
-			resp = strings.Replace(resp, "[matchMobile]", "", -1)
-			resp = strings.Replace(resp, "[matchStatus]", "1", -1)
+		if strings.HasPrefix((*user)["imsi"], "460") {
+			if len([]rune((*user)["mobile"])) >= 11 || matchCount > 10 {
+				resp = strings.Replace(resp, "[matchMobile]", "", -1)
+				resp = strings.Replace(resp, "[matchStatus]", "1", -1)
+			} else {
+				matchMobile, _ := mapConfig.Load("matchMobile")
+				resp = strings.Replace(resp, "[matchMobile]", matchMobile.(string), -1)
+				resp = strings.Replace(resp, "[matchStatus]", "0", -1)
+				go updateUserMatchCount(r.FormValue("imsi"))
+			}
 		} else {
+			insertTime, _ := strconv.ParseInt((*user)["insertTime"], 10, 64)
+			if len([]rune((*user)["mobile"])) >= 5 || matchCount > 3 || (time.Now().Unix()-insertTime) < 30*86400 {
+				resp = strings.Replace(resp, "[matchMobile]", "", -1)
+				resp = strings.Replace(resp, "[matchStatus]", "1", -1)
+			} else {
+				matchMobile, _ := mapConfig.Load("matchMobile")
+				matchMobileForForeign := "0086" + matchMobile.(string)
+				resp = strings.Replace(resp, "[matchMobile]", matchMobileForForeign, -1)
+				resp = strings.Replace(resp, "[matchStatus]", "0", -1)
+				go updateUserMatchCount(r.FormValue("imsi"))
+			}
+		}
+	} else {
+		if strings.HasPrefix((*user)["imsi"], "460") {
 			matchMobile, _ := mapConfig.Load("matchMobile")
 			resp = strings.Replace(resp, "[matchMobile]", matchMobile.(string), -1)
 			resp = strings.Replace(resp, "[matchStatus]", "0", -1)
-			go updateUserMatchCount(r.FormValue("imsi"))
+		} else {
+			resp = strings.Replace(resp, "[matchMobile]", "", -1)
+			resp = strings.Replace(resp, "[matchStatus]", "1", -1)
 		}
-	} else {
-		matchMobile, _ := mapConfig.Load("matchMobile")
-		resp = strings.Replace(resp, "[matchMobile]", matchMobile.(string), -1)
-		resp = strings.Replace(resp, "[matchStatus]", "0", -1)
 		go insertUser(r.FormValue("imsi"))
 	}
 	resp = procGetResp(resp)
