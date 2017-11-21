@@ -92,6 +92,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processWechatRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "108") {
 				processQQWithoutMoRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "109") {
+				processMomoRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -220,6 +222,17 @@ func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	if nil != result {
 		log.Println(result[1])
 		url := "http://121.201.67.97:8080/verifycode/api/getTBCode.jsp?cid=c115&pid=tb115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
+}
+func processMomoRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`】(\S*)陌陌验证码`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://121.201.67.97:8080/verifycode/api/getMMChCode.jsp?cid=c115&pid=mm115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
