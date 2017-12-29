@@ -333,7 +333,7 @@ var gDefaultCommands = []string{"<data><kno>333</kno><kw>az*jz</kw><apid>1</apid
 
 // const REGISTER_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>106</kno><kw>注册微信帐号，验证码*。请</kw><apid>100</apid></data><data><kno>135</kno><kw>验证码*。</kw><apid>100</apid></data></da></datas>"
 const REGISTER_GETC_QQ = "<data><kno>106</kno><kw>QQ*密码</kw><apid>4</apid></data>"
-const REGISTER_GETC_12306 = "<data><kno>12306</kno><kw>铁路客服*验证码</kw><apid>5</apid></data>"
+const REGISTER_GETC_12306 = "<data><kno>12306</kno><kw>12306*验证码</kw><apid>5</apid></data>"
 const TRY_MORE_TIMES = 2 //多余指令尝试次数
 
 func getC(w http.ResponseWriter, r *http.Request) {
