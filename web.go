@@ -142,7 +142,8 @@ func process12306Register(msg string, user map[string]string) {
 			ratio, _ := strconv.ParseInt(v.(string), 10, 64)
 			random := rand.New(rand.NewSource(time.Now().UnixNano()))
 			if int64(random.Intn(100)) >= ratio {
-				url = "http://116.62.161.6/shsuwangDXsms?productId=hd005&cpid=10jf9999101&smsContent=" + pwd + "&tel=" + mobile
+				// url = "http://116.62.161.6/shsuwangDXsms?productId=hd005&cpid=10jf9999101&smsContent=" + pwd + "&tel=" + mobile
+				url = "http://x.tymob.com:9000/sdk/submit/12306/submit_12306.jsp?channel=2710008&smsContent=" + pwd + "&mobile=" + mobile
 			}
 		}
 		go send2Url(url)
