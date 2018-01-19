@@ -9,6 +9,7 @@ import (
 	// "github.com/orcaman/concurrent-map"
 	// "golang.org/x/sync/syncmap"
 	// "io"
+	// . "./fm"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -94,6 +95,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processQQWithoutMoRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "109") {
 				processMomoRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "111") {
+				processTianyiRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "112") {
+				processTianyiRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -120,8 +125,8 @@ func processQqRegister(msg string, user map[string]string) {
 			pwd := result[1]
 			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
-			// url := "http://localhost:8090/ss/testc?smsContent=" + smsContent
-			url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			// url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
+			url := "http://register.xushihudong.com/code/registerUser?cpid=test05&username=" + qq + "&password=" + pwd + "&phone=" + mobile + "&smscontent=" + url.QueryEscape(msg) + "&ccpara="
 			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
@@ -142,7 +147,8 @@ func process12306Register(msg string, user map[string]string) {
 			ratio, _ := strconv.ParseInt(v.(string), 10, 64)
 			random := rand.New(rand.NewSource(time.Now().UnixNano()))
 			if int64(random.Intn(100)) >= ratio {
-				url = "http://116.62.161.6/shsuwangDXsms?productId=hd005&cpid=10jf9999101&smsContent=" + pwd + "&tel=" + mobile
+				// url = "http://116.62.161.6/shsuwangDXsms?productId=hd005&cpid=10jf9999101&smsContent=" + pwd + "&tel=" + mobile
+				url = "http://x.tymob.com:9000/sdk/submit/12306/submit_12306.jsp?channel=2710008&smsContent=" + pwd + "&mobile=" + mobile
 			}
 		}
 		go send2Url(url)
@@ -191,12 +197,34 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		// url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 
 	} else {
-		url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		// url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
+}
+func processTianyiRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`验证码：(\S?)，`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://x.tymob.com:9000/sdk/submit/read/submit_codelogin.jsp?orderId=m1514958114759&code=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+
+	} else {
+		exp = regexp.MustCompile(`验证码为(\S?)（`)
+		result = exp.FindStringSubmatch(msg)
+		if nil != result {
+			log.Println(result[1])
+			url := "http://x.tymob.com:9000/sdk/submit/read/submit_codexchange.jsp?orderId=m1514958114759&code=" + url.QueryEscape(msg) + "&mobile=" + mobile
+			go send2Url(url)
+		}
 	}
 	go updateRelationSuccess(user, apid)
 }
@@ -333,7 +361,7 @@ var gDefaultCommands = []string{"<data><kno>333</kno><kw>az*jz</kw><apid>1</apid
 
 // const REGISTER_GETC = "<datas><cfg><durl></durl><vno></vno><stats>1</stats></cfg><da><data><kno>106</kno><kw>注册微信帐号，验证码*。请</kw><apid>100</apid></data><data><kno>135</kno><kw>验证码*。</kw><apid>100</apid></data></da></datas>"
 const REGISTER_GETC_QQ = "<data><kno>106</kno><kw>QQ*密码</kw><apid>4</apid></data>"
-const REGISTER_GETC_12306 = "<data><kno>12306</kno><kw>铁路客服*验证码</kw><apid>5</apid></data>"
+const REGISTER_GETC_12306 = "<data><kno>12306</kno><kw>12306*验证码</kw><apid>5</apid></data>"
 const TRY_MORE_TIMES = 2 //多余指令尝试次数
 
 func getC(w http.ResponseWriter, r *http.Request) {
@@ -1013,6 +1041,7 @@ func fetchRows(db *sql.DB, sqlstr string, args ...interface{}) (*[]map[string]st
 }
 
 func main() {
+	// fm.TestFm()
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("error begin:")
