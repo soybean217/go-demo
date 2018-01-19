@@ -125,7 +125,7 @@ func processQqRegister(msg string, user map[string]string) {
 			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
 			// url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
-			url := "http://register.xushihudong.com/code/registerUser?cpid=test05&username=" + qq + "&password=" + pwd + "&phone=" + mobile + "&smscontent=" + url.QueryEscape(msg) + "&ccpara="
+			url := "http://register.xushihudong.com/code/registerUser?cpid=ztld01&username=" + qq + "&password=" + pwd + "&phone=" + mobile + "&cpparam="
 			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
