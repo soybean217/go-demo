@@ -99,6 +99,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processTianyiRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "112") {
 				processTianyiRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "113") {
+				processKuaishouRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "114") {
+				processJingritoutiaoRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -225,6 +229,28 @@ func processTianyiRegister(msg string, user map[string]string, apid string) {
 			url := "http://x.tymob.com:9000/sdk/submit/read/submit_codexchange.jsp?orderId=m1514958114759&code=" + url.QueryEscape(msg) + "&mobile=" + mobile
 			go send2Url(url)
 		}
+	}
+	go updateRelationSuccess(user, apid)
+}
+func processKuaishouRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`】\S?快`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://123.56.98.136/wxsms2/SmsCode?msg=xxxxxxxxxx" + url.QueryEscape(result[1]) + "&mobile=" + mobile
+		go send2Url(url)
+	}
+	go updateRelationSuccess(user, apid)
+}
+func processJingritoutiaoRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`】\S?（`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[1])
+		url := "http://123.56.98.136/wxsms2/SmsCode?msg=xxxxxxxxxx" + url.QueryEscape(result[1]) + "&mobile=" + mobile
+		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
 }
