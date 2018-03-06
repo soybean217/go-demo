@@ -250,8 +250,6 @@ func processJingritoutiaoRegister(msg string, user map[string]string, apid strin
 	// go send2Url(url)
 	exp := regexp.MustCompile(`(\d+)`)
 	result := exp.FindStringSubmatch(msg)
-	log.Println(exp)
-	log.Println(result)
 	if nil != result {
 		log.Println(result[1])
 		url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(result[1]) + "&mobile=" + mobile
