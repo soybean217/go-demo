@@ -204,7 +204,6 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 		// url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
-
 	} else {
 		// url := "http://121.201.67.97:8080/verifycode/api/getJDNET.jsp?cid=wx109&pid=jd109&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
@@ -214,7 +213,7 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 }
 func processTianyiRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`验证码：(\S?)，`)
+	exp := regexp.MustCompile(`验证码：(\S*)，`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
@@ -234,22 +233,24 @@ func processTianyiRegister(msg string, user map[string]string, apid string) {
 }
 func processKuaishouRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`】\S?快`)
+	exp := regexp.MustCompile(`(\d+)`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://123.56.98.136/wxsms2/SmsCode?msg=xxxxxxxxxx" + url.QueryEscape(result[1]) + "&mobile=" + mobile
+		url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(result[1]) + "&mobile=" + mobile
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
 }
 func processJingritoutiaoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`】\S?（`)
+	exp := regexp.MustCompile(`(\d+)`)
 	result := exp.FindStringSubmatch(msg)
+	log.Println(exp)
+	log.Println(result)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://123.56.98.136/wxsms2/SmsCode?msg=xxxxxxxxxx" + url.QueryEscape(result[1]) + "&mobile=" + mobile
+		url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(result[1]) + "&mobile=" + mobile
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
