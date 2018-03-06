@@ -233,6 +233,8 @@ func processTianyiRegister(msg string, user map[string]string, apid string) {
 }
 func processKuaishouRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
+	// url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(msg) + "&mobile=" + mobile
+	// go send2Url(url)
 	exp := regexp.MustCompile(`(\d+)`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
@@ -244,6 +246,8 @@ func processKuaishouRegister(msg string, user map[string]string, apid string) {
 }
 func processJingritoutiaoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
+	// url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(msg) + "&mobile=" + mobile
+	// go send2Url(url)
 	exp := regexp.MustCompile(`(\d+)`)
 	result := exp.FindStringSubmatch(msg)
 	log.Println(exp)
