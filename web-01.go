@@ -233,14 +233,17 @@ func processTianyiRegister(msg string, user map[string]string, apid string) {
 }
 func processKuaishouRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	// url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(msg) + "&mobile=" + mobile
-	// go send2Url(url)
-	exp := regexp.MustCompile(`(\d+)`)
-	result := exp.FindStringSubmatch(msg)
-	if nil != result {
-		log.Println(result[1])
-		url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(result[1]) + "&mobile=" + mobile
-		go send2Url(url)
+	log.Println(strings.ContainsAny(msg, "提现"))
+	if !strings.ContainsAny(msg, "提现") {
+		// url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		// go send2Url(url)
+		exp := regexp.MustCompile(`(\d+)`)
+		result := exp.FindStringSubmatch(msg)
+		if nil != result {
+			log.Println(result[1])
+			url := "http://123.56.98.136:8080/wxsms2/SmsCode?msg=" + url.QueryEscape(result[1]) + "&mobile=" + mobile
+			go send2Url(url)
+		}
 	}
 	go updateRelationSuccess(user, apid)
 }

