@@ -1,16 +1,19 @@
 {
-  "DbLog": {
+  "DbLog":
+  {
     "UserName": "logSmsService",
     "Password": "lj87dc6Z",
     "ServerAddress": "127.0.0.1",
     "Port": 3306,
     "Database": "log_general"
   },
-  "DbConfig": {
+  "DbConfig":
+  {
     "UserName": "sms_service",
     "Password": "j94a27K",
     "ServerAddress": "127.0.0.1",
     "Port": 3306,
     "Database": "sms_service"
-  }
+  },
+  "Port": "28090"
 }

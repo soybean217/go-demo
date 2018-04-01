@@ -692,6 +692,7 @@ type DbConfigure struct {
 type DbConfigs struct {
 	DbLog    DbConfigure `json:"DbLog"`
 	DbConfig DbConfigure `json:"DbConfig"`
+	Port     string      `json:"Port"`
 }
 
 type InfoRequest struct {
@@ -723,9 +724,6 @@ func init() {
 	// mapRegisterChannelConfig = make(map[string]map[string]string)
 	// mapRegisterChannelConfig = new(syncmap.Map)
 	// mapRegisterTargetConfig = cmap.New()
-	if !loadFileConfig() {
-		os.Exit(1)
-	}
 
 	//热更新配置可能有多种触发方式，这里使用系统信号量sigusr1实现
 	// s := make(chan os.Signal, 1)
@@ -736,6 +734,10 @@ func init() {
 	// 		log.Println("Reloaded config:", loadFileConfig())
 	// 	}
 	// }()
+
+	if !loadFileConfig() {
+		os.Exit(1)
+	}
 
 	dbLog, _ = sql.Open("mysql", config.DbLog.UserName+":"+config.DbLog.Password+"@tcp("+config.DbLog.ServerAddress+":"+fmt.Sprintf("%d", config.DbLog.Port)+")/"+config.DbLog.Database+"?charset=utf8")
 	dbLog.SetMaxOpenConns(20)
@@ -755,7 +757,7 @@ func init() {
 	}
 	loadGlobalConfigFromDb()
 	go timerReload()
-	log.Println("init end.")
+	log.Println("init end on:" + config.Port)
 }
 
 func loadGlobalConfigFromDb() {
@@ -953,8 +955,9 @@ func main() {
 			log.Println("error end:")
 		}
 	}()
+
 	server := &http.Server{
-		Addr:         ":8090",
+		Addr:         ":" + config.Port,
 		ReadTimeout:  16 * time.Second,
 		WriteTimeout: 16 * time.Second,
 	}
