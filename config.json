@@ -15,5 +15,5 @@
     "Port": 3306,
     "Database": "sms_service"
   },
-  "Port": "28090"
+  "Port": "8090"
 }

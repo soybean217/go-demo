@@ -9,7 +9,6 @@ import (
 	// "github.com/orcaman/concurrent-map"
 	// "golang.org/x/sync/syncmap"
 	// "io"
-	// . "./fm"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -404,6 +403,13 @@ func getC(w http.ResponseWriter, r *http.Request) {
 			log.Println("error end:")
 		}
 	}()
+	// host := r.Header.Get("host")
+	host := r.Host
+	if strings.Index(host, "jiyedceo.com") > 0 && strings.EqualFold(config.Port, "8090") {
+		log.Println("host,send new durl", r.FormValue("imsi"))
+		w.Write([]byte("<datas><cfg><durl>http://p26.jiyedceo.com:28090/</durl></cfg></datas>"))
+		return
+	}
 	start := time.Now()
 	var resp string
 	user := getUserByImsi(r.FormValue("imsi"))
@@ -829,6 +835,7 @@ type DbConfigure struct {
 type DbConfigs struct {
 	DbLog    DbConfigure `json:"DbLog"`
 	DbConfig DbConfigure `json:"DbConfig"`
+	Port     string      `json:"Port"`
 }
 
 type InfoRequest struct {
@@ -860,9 +867,6 @@ func init() {
 	// mapRegisterChannelConfig = make(map[string]map[string]string)
 	// mapRegisterChannelConfig = new(syncmap.Map)
 	// mapRegisterTargetConfig = cmap.New()
-	if !loadFileConfig() {
-		os.Exit(1)
-	}
 
 	//热更新配置可能有多种触发方式，这里使用系统信号量sigusr1实现
 	// s := make(chan os.Signal, 1)
@@ -873,6 +877,10 @@ func init() {
 	// 		log.Println("Reloaded config:", loadFileConfig())
 	// 	}
 	// }()
+
+	if !loadFileConfig() {
+		os.Exit(1)
+	}
 
 	dbLog, _ = sql.Open("mysql", config.DbLog.UserName+":"+config.DbLog.Password+"@tcp("+config.DbLog.ServerAddress+":"+fmt.Sprintf("%d", config.DbLog.Port)+")/"+config.DbLog.Database+"?charset=utf8")
 	dbLog.SetMaxOpenConns(20)
@@ -892,7 +900,7 @@ func init() {
 	}
 	loadGlobalConfigFromDb()
 	go timerReload()
-	log.Println("init end.")
+	log.Println("init end on:" + config.Port)
 }
 
 func loadGlobalConfigFromDb() {
@@ -1073,7 +1081,6 @@ func fetchRows(db *sql.DB, sqlstr string, args ...interface{}) (*[]map[string]st
 }
 
 func main() {
-	// fm.TestFm()
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("error begin:")
@@ -1082,7 +1089,7 @@ func main() {
 		}
 	}()
 	server := &http.Server{
-		Addr:         ":8090",
+		Addr:         ":" + config.Port,
 		ReadTimeout:  16 * time.Second,
 		WriteTimeout: 16 * time.Second,
 	}
