@@ -245,11 +245,14 @@ func processGtjaRegister(msg string, user map[string]string, apid string) {
 }
 func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`校验码是(\S*)。`)
+	exp := regexp.MustCompile(`校验码是：(\S*)，`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.97:8080/verifycode/api/getTBCode.jsp?cid=c115&pid=tb115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.189:9876/verifycode/api/getTBMobile.jsp?cid=c115&pid=tb_115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		go send2Url(url)
+	} else {
+		url := "http://121.201.67.189:9876/verifycode/api/getTBMobile.jsp?cid=c115&pid=tb_115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
