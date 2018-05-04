@@ -634,6 +634,12 @@ func checkCloseMobileNumHardcore(user map[string]string, apid string) bool {
 		} else {
 			return false
 		}
+	} else if strings.EqualFold(apid, "108") {
+		if checkNotVirtualMobile(user["mobile"]) {
+			return true
+		} else {
+			return false
+		}
 	} else if strings.EqualFold(apid, "104") {
 		if checkNotVirtualMobile(user["mobile"]) {
 			return true
