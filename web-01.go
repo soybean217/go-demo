@@ -265,11 +265,11 @@ func processGtjaRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[1])
-		url := "http://121.201.67.97:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.189:9876/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 
 	} else {
-		url := "http://121.201.67.97:8080/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		url := "http://121.201.67.189:9876/verifycode/api/getYYZNET.jsp?cid=c115&pid=yyz115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
 		go send2Url(url)
 	}
 	go updateRelationSuccess(user, apid)
