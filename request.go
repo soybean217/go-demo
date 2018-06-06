@@ -929,7 +929,6 @@ func readRequest(b *bufio.Reader, deleteHostHeader bool) (req *Request, err erro
 	if s, err = tp.ReadLine(); err != nil {
 		return nil, err
 	}
-	fmt.Printf("begin readRequest: %s \n", s)
 	defer func() {
 		putTextprotoReader(tp)
 		if err == io.EOF {
@@ -939,7 +938,7 @@ func readRequest(b *bufio.Reader, deleteHostHeader bool) (req *Request, err erro
 
 	var ok bool
 	req.Method, req.RequestURI, req.Proto, ok = parseRequestLine(s)
-	fmt.Printf("parseRequestLine: %t \n", ok)
+	// fmt.Printf("parseRequestLine: %t \n", ok)
 	if !ok {
 		return nil, &badStringError{"malformed HTTP request", s}
 	}
