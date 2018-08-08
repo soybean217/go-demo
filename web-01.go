@@ -199,7 +199,7 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[0])
-		url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=9d7b9ee4d7a941048d6e08348540717d&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://112.74.183.43:9700/lsapi/channel/reportVerifyCode?cpid=c5751286f2d1463e9ca19cc6767b014a&telephone=" + mobile + "& smsContent=" + result[0]
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
@@ -290,16 +290,29 @@ func processGtjaRegister(msg string, user map[string]string, apid string) {
 	}
 	go updateRelationSuccess(user, apid)
 }
+
+// func processTaobaoRegister(msg string, user map[string]string, apid string) {
+// 	mobile := formatMobile(user["mobile"])
+// 	exp := regexp.MustCompile(`您(\S*)码`)
+// 	result := exp.FindStringSubmatch(msg)
+// 	if nil != result {
+// 		log.Println(result[1])
+// 		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?channel=2940001&content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+// 		go send2Url(url)
+// 	}
+// 	go updateRelationSuccess(user, apid)
+// }
 func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`您(\S*)码`)
+	exp := regexp.MustCompile(`\d{6}`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
-		log.Println(result[1])
-		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?channel=2940001&content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		log.Println(result[0])
+		url := "http://120.79.248.187:9801/lsapi/channel/reportVerifyCode?cpid=ecb5ad33a8c644fbbb89648e64af5182&smsContent=" + result[0] + "&telephone=" + mobile
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
+		go updateRelationSuccess(user, apid)
 	}
-	go updateRelationSuccess(user, apid)
 }
 func processMomoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
