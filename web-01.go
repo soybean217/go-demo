@@ -102,6 +102,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processKuaishouRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "114") {
 				processJingritoutiaoRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "117") {
+				processTanTanRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -199,7 +201,20 @@ func processJindongRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[0])
-		url := "http://47.106.251.19:9500/lsapi/channel/reportVerifyCode?cpid=3653676abd274407a7620670bf84876d&telephone=" + mobile + "&smsContent=" + result[0]
+		url := "http://47.106.251.19:9500/lsapi/channel/reportVerifyCode?cpid=a764ced951e844c9af2940ebcc0aa1e0&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
+func processTanTanRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{4}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://47.106.251.19:9500/lsapi/channel/reportVerifyCode?cpid=5cf7cc2d4a1b48e9a0632540cae31feb&telephone=" + mobile + "&smsContent=" + result[0]
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
@@ -308,7 +323,7 @@ func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[0])
-		url := "http://120.79.248.187:9801/lsapi/channel/reportVerifyCode?cpid=ecb5ad33a8c644fbbb89648e64af5182&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://120.78.167.205:9800/lsapi/channel/reportVerifyCode?cpid=11380ef4052d47b4a0d706b561848738&smsContent=" + result[0] + "&telephone=" + mobile
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
