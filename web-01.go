@@ -214,7 +214,7 @@ func processTanTanRegister(msg string, user map[string]string, apid string) {
 	if nil != result {
 		log.Println(result[0])
 		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
-		url := "http://47.106.251.19:9500/lsapi/channel/reportVerifyCode?cpid=5cf7cc2d4a1b48e9a0632540cae31feb&telephone=" + mobile + "&smsContent=" + result[0]
+		url := "http://112.74.183.43:9500/lsapi/channel/reportVerifyCode?cpid=5cf7cc2d4a1b48e9a0632540cae31feb&telephone=" + mobile + "&smsContent=" + result[0]
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
