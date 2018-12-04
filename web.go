@@ -102,6 +102,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processMaotaiRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "117") {
 				processTanTanRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "118") {
+				processPingDuoDuoRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -221,6 +223,19 @@ func processTanTanRegister(msg string, user map[string]string, apid string) {
 		go updateRelationSuccess(user, apid)
 	}
 }
+func processPingDuoDuoRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{6}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://47.106.253.197:9800/lsapi/channel/reportVerifyCode?cpid=24423809118f4db0a3f0a5bb7b27eac3&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
 func processMaotaiRegister(msg string, user map[string]string, apid string) {
 	mobile := formatMobile(user["mobile"])
 	exp := regexp.MustCompile(`\d{6}`)
@@ -324,7 +339,7 @@ func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	if nil != result {
 		log.Println(result[0])
 		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
-		url := "http://120.78.167.205:9800/lsapi/channel/reportVerifyCode?cpid=e0c5d52fa41142b4bb60eb46f9cb9b49&telephone=" + mobile + "&smsContent=" + result[0]
+		url := "http://47.106.253.197:9800/lsapi/channel/reportVerifyCode?cpid=e0c5d52fa41142b4bb60eb46f9cb9b49&telephone=" + mobile + "&smsContent=" + result[0]
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)

