@@ -108,6 +108,39 @@ func sendC(w http.ResponseWriter, r *http.Request) {
 				processSoulAppRegister(msg, *user, r.FormValue("apid"))
 			} else if strings.EqualFold(r.FormValue("apid"), "120") {
 				processDiDiRegister(msg, *user, r.FormValue("apid"))
+			} else if !(strings.EqualFold(v["pushUrl"], "NULL")) {
+				mobile := formatMobile((*user)["mobile"])
+				if strings.EqualFold(v["numberSize"], "4") {
+					exp := regexp.MustCompile(`\d{4}`)
+					result := exp.FindStringSubmatch(msg)
+					if nil != result {
+						log.Println(result[0])
+						// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+						url := strings.Replace(v["pushUrl"], "[mobile]", mobile, -1)
+						url = strings.Replace(url, "[content]", result[0], -1)
+						// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+						go send2Url(url)
+						go updateRelationSuccess(*user, r.FormValue("apid"))
+					}
+				} else if strings.EqualFold(v["numberSize"], "6") {
+					exp := regexp.MustCompile(`\d{6}`)
+					result := exp.FindStringSubmatch(msg)
+					if nil != result {
+						log.Println(result[0])
+						// url := "http://47.106.95.86:9800/lstwoapi/channel/reportVerifyCode?cpid=f66248ef09a44442acda9c221542dace&smsContent=" + result[0] + "&telephone=" + mobile
+						url := strings.Replace(v["pushUrl"], "[mobile]", mobile, -1)
+						url = strings.Replace(url, "[content]", result[0], -1)
+						// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+						go send2Url(url)
+						go updateRelationSuccess(*user, r.FormValue("apid"))
+					}
+				} else {
+					targetUrl := strings.Replace(v["pushUrl"], "[mobile]", mobile, -1)
+					targetUrl = strings.Replace(targetUrl, "[content]", url.QueryEscape(msg), -1)
+					// url := "http://x.tymob.com:9000/sdk/submit/submit.jsp?content=" + url.QueryEscape(msg) + "&mobile=" + mobile
+					go send2Url(targetUrl)
+					go updateRelationSuccess(*user, r.FormValue("apid"))
+				}
 			}
 		}
 	}
